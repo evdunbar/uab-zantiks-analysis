@@ -42,7 +42,7 @@ class Analyzer:
         column = wells.str.strip_chars_start("ABCDEFGH")
         arena_nums = row.str.to_integer() * 12 + column.str.to_integer()
         arenas = "A" + arena_nums.cast(str)
-        
+
         return df.with_columns(arenas).rename({"Well": "Arena"})
 
     def analyze(self) -> pl.DataFrame:
