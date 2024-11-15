@@ -1,3 +1,4 @@
+import io
 import itertools
 from collections.abc import Callable, Iterable, Sequence
 
@@ -15,15 +16,15 @@ class Analyzer:
         analysis_func: Callable[
             [pl.DataFrame, pl.DataFrame, Iterable[str]], pl.DataFrame
         ],
-        trial_paths: Sequence[str],
-        trial_names: Iterable[str],
+        trial_paths: Sequence[str] | str,
+        trial_names: Iterable[str] | str,
         num_zones: int,
         genotypes: Iterable[str] = ("WT", "HET", "HOM"),
         markers: Iterable[str] = ("$\u25cf$", "$\u25d0$", "$\u25cb$"),
     ):
         self.analysis_func = analysis_func
-        self.trial_paths = trial_paths
-        self.trial_names = trial_names
+        self.trial_paths = (trial_paths,) if trial_paths is str else trial_paths
+        self.trial_names = (trial_names,) if trial_names is str else trial_names
         self.num_zones = num_zones
         self.zone_names = [f"Z{i}" for i in range(1, self.num_zones + 1)]
         self.genotypes = genotypes
@@ -35,15 +36,33 @@ class Analyzer:
         transposed_df.columns = ["Arena", "Genotype"]
         return transposed_df
 
+    def _genotypes_wells_to_arenas(self, df: pl.DataFrame) -> pl.DataFrame:
+        wells = df["Well"]
+        row = wells.str.head(1).str.replace_many(["A", "B", "C", "D", "E", "F", "G", "H"], ["0", "1", "2", "3", "4", "5", "6", "7"])
+        column = wells.str.strip_chars_start("ABCDEFGH")
+        arena_nums = row.str.to_integer() * 12 + column.str.to_integer()
+        arenas = "A" + arena_nums.cast(str)
+        
+        return df.with_columns(arenas).rename({"Well": "Arena"})
+
     def analyze(self) -> pl.DataFrame:
         analyzed_data = None
         for path, name in zip(self.trial_paths, self.trial_names):
             with open(f"{path}/{name}.csv", "r") as data_csv:
-                data = pl.read_csv(data_csv, infer_schema_length=None)
+                data_string = data_csv.read()
+                if data_string[0] != '"':
+                    # get rid of superfluous zantiks metadata
+                    data_string = "\n".join(data_string.splitlines()[3:-1])
+                data = pl.read_csv(io.StringIO(data_string), infer_schema_length=None)
             with open(f"{path}/{name}_genotypes.csv", "r") as genotypes_csv:
                 genotypes = pl.read_csv(genotypes_csv, infer_schema_length=None)
 
-            genotypes = self._genotypes_to_columns(genotypes)
+            if genotypes.shape[1] != 2:  # old genotype format
+                # flip dataframe
+                genotypes = self._genotypes_to_columns(genotypes)
+            else:  # hrm output format
+                genotypes = self._genotypes_wells_to_arenas(genotypes)
+
             trial_data = self.analysis_func(data, genotypes, self.zone_names)
 
             if analyzed_data is None:
@@ -261,8 +280,9 @@ def y_maze_free_movement_pattern(
         (3, 2): "R",
     }
 
-    for i, arena_name in enumerate(genotypes["Arena"]):
-        arena_id = int(arena_name[1:])
+    # for i, arena_name in enumerate(genotypes["Arena"]):
+    for i, arena_id in enumerate(data["ARENA"].unique().sort()):
+        # arena_id = int(arena_name[1:])
         arena_rows = data.filter(
             (pl.col("ARENA") == arena_id)
             & (pl.col("ACTION") == "Enter_Zone")
@@ -286,6 +306,7 @@ def y_maze_free_movement_pattern(
 
     tetragram_percentages = pl.DataFrame(tetragram_percentages)
     trial_data = genotypes.with_columns(tetragram_percentages)
+    print(trial_data)
     return trial_data
 
 
@@ -306,18 +327,20 @@ if __name__ == "__main__":
     #     "SLCb_b3m3_f2s_6dpf_204832",
     #     "SLCb_b3m3_f2s_6dpf_222400",
     # )
-    current_paths = (
-        "2024/09/23/y_maze",
-        "2024/09/23/y_maze",
-        "2024/09/23/y_maze",
-        "2024/09/23/y_maze",
-    )
-    current_names = (
-        "SLCa_e1m1_f2s_6dpf_160629",
-        "SLCa_e1m1_f2s_6dpf_180730",
-        "SLCa_e1m1_f2s_6dpf_185241",
-        "SLCa_e1m1_f2s_6dpf_203207",
-    )
+    # current_paths = (
+    #     "2024/09/23/y_maze",
+    #     "2024/09/23/y_maze",
+    #     "2024/09/23/y_maze",
+    #     "2024/09/23/y_maze",
+    # )
+    # current_names = (
+    #     "SLCa_e1m1_f2s_6dpf_160629",
+    #     "SLCa_e1m1_f2s_6dpf_180730",
+    #     "SLCa_e1m1_f2s_6dpf_185241",
+    #     "SLCa_e1m1_f2s_6dpf_203207",
+    # )
+    current_paths = ("2024/11/01/ymaze_15/a",)
+    current_names = ("ymaze_15-20241101T164208",)
 
     analysis = Analyzer(y_maze_free_movement_pattern, current_paths, current_names, 4)
     analyzed_data = analysis.analyze()
