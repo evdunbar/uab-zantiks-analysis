@@ -1,6 +1,8 @@
 # User added
 2024/
 figures/
+*.xlsx
+*.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
