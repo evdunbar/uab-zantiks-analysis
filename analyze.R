@@ -10,7 +10,7 @@ DATA_FILE <- "2024/11/01/ymaze_15/a/ymaze_15-20241101T164208.csv"
 # Input the genotyping file path
 GENOTYPING_FILE <- "2024/11/04/genotypes.csv"
 
-# What do you want the output to be saved to? 
+# What do you want the output to be saved to?
 # Name should end with .csv
 # Leave empty for default of "output.csv"
 OUTPUT_FILE <- ""
@@ -39,8 +39,8 @@ ASSAY_NAME <- "y-maze 15"
 #                            G .  .  .  .  .  .  .  .  .  .  .  .
 #                            H .  .  .  .  .  .  .  .  .  .  .  .
 LABELLING_TYPE <- 48
-#   - If 48-well, YOU MUST specify if left or right within the 96-well genotyping plate
-LEFT_OR_RIGHT <- "left"
+#   - If 48-well, YOU MUST specify if left half, right half, or top left within the 96-well genotyping plate
+LOCATION_48 <- "left half"
 #   - Count down columns or across rows first?
 COLUMN_OR_ROW_FIRST <- "column"
 
@@ -60,6 +60,7 @@ library(tidyverse)
 process_genotypes <- function() {
   # create matrix to help with computations
   helper_matrix <- matrix(0:95, nrow = 8, ncol = 12, byrow = TRUE)
+  print(helper_matrix)
 
   # get correct data and convert to 0-95 labelling
   genotype_data <- read_csv(GENOTYPING_FILE) %>%
@@ -69,12 +70,14 @@ process_genotypes <- function() {
 
   # correct to matrix to right format
   if (LABELLING_TYPE == 48) {
-    if (LEFT_OR_RIGHT == "left") {
+    if (LOCATION_48 == "left half") {
       helper_matrix <- t(helper_matrix[, 1:6])
-    } else if (LEFT_OR_RIGHT == "right") {
+    } else if (LOCATION_48 == "right half") {
       helper_matrix <- t(helper_matrix[, 7:12])
+    } else if (LOCATION_48 == "top left") {
+      helper_matrix <- helper_matrix[1:6, 1:8]
     } else {
-      stop("LEFT_OR_RIGHT must be either \"left\" or \"right\"")
+      stop("LOCATION_48 must be \"left half\", \"right half\", or \"top left\"")
     }
 
     # filter data to the side we just specified
