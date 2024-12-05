@@ -55,36 +55,67 @@ FISH_USED <- c("A1-F2")
 ############
 
 library(tidyverse)
+library(dplyr)
+library(readr)
+
+# turn FISH_USED into a machine readable format
+parse_fish_used <- function() {
+  is_range <- str_detect(FISH_USED, "-")
+  ranges <- str_split(FISH_USED[is_range], "-")
+  individuals <- FISH_USED[!is_range]
+
+  return(c(ranges, individuals))
+}
 
 # turn full genotype file into a table that can be merged with the data
 process_genotypes <- function() {
-  # create matrix to help with computations
-  helper_matrix <- matrix(0:95, nrow = 8, ncol = 12, byrow = TRUE)
-  print(helper_matrix)
-
   # get correct data and convert to 0-95 labelling
   genotype_data <- read_csv(GENOTYPING_FILE) %>%
     select(genotyping_well = Well, genotype = Cluster) %>%
     filter(genotype %in% c("HET", "HOM", "WT")) %>%
-    mutate(well_number = as.integer((match(substr(genotyping_well, 1, 1), LETTERS[1:8]) - 1) * 12 + as.integer(substr(genotyping_well, 2, 3)) - 1))
+    mutate(well_id = as.integer((match(substr(genotyping_well, 1, 1), LETTERS[1:8]) - 1) * 12 +
+                                  as.integer(substr(genotyping_well, 2, 3)) - 1))
 
-  # correct to matrix to right format
-  if (LABELLING_TYPE == 48) {
+  # create matrices to help with computations
+  equivalence_matrix <- matrix(0:95, nrow = 8, ncol = 12, byrow = TRUE)
+  if (LABELLING_TYPE == 96) {
+    labeling_matrix <- matrix(outer(LETTERS[1:8], sprintf("%d", 1:12), FUN = paste0), nrow = 8, ncol = 12)
+  } else if (LABELLING_TYPE == 48) {
+    labeling_matrix <- matrix(outer(LETTERS[1:6], sprintf("%d", 1:8), FUN = paste0), nrow = 6, ncol = 8)
     if (LOCATION_48 == "left half") {
-      helper_matrix <- t(helper_matrix[, 1:6])
+      equivalence_matrix <- t(equivalence_matrix[, 1:6])
     } else if (LOCATION_48 == "right half") {
-      helper_matrix <- t(helper_matrix[, 7:12])
+      equivalence_matrix <- t(equivalence_matrix[, 7:12])
     } else if (LOCATION_48 == "top left") {
-      helper_matrix <- helper_matrix[1:6, 1:8]
+      equivalence_matrix <- equivalence_matrix[1:6, 1:8]
     } else {
       stop("LOCATION_48 must be \"left half\", \"right half\", or \"top left\"")
     }
 
     # filter data to the side we just specified
     genotype_data <- genotype_data %>%
-      filter(well_number %in% helper_matrix)
-  } else if (LABELLING_TYPE != 96) {
+      filter(well_id %in% equivalence_matrix)
+  } else {
     stop("LABELLING_TYPE must be either 48 or 96")
+  }
+
+  # get matrix positions to access well id
+  used_matrix <- matrix(FALSE, nrow = nrow(labeling_matrix), ncol = ncol(labeling_matrix))
+  parsed_fish <- parse_fish_used()
+  for (i in 1:(length(parsed_fish[1]) / 2)) {
+    begin_well <- parsed_fish[1][i * 2]
+    end_well <- parsed_fish[1][i * 2 + 1]
+    begin_location <- which(labeling_matrix == begin, arr.ind = TRUE)
+    end_location <- which(labeling_matrix == end, arr.ind = TRUE)
+    begin_row <- begin_location[row]
+    begin_col <- begin_location[col]
+    end_row <- end_location[row]
+    end_col <- end_location[col]
+  }
+  if (COLUMN_OR_ROW_FIRST == "row") {
+  } else if (COLUMN_OR_ROW_FIRST == "column") {
+  } else {
+    stop("COLUMN_OR_ROW_FIRST must be either \"row\" or \"column\"")
   }
 
   print(genotype_data)
@@ -127,7 +158,10 @@ y_maze_analysis <- function(df) {
     mutate(next_next_turn = lead(next_turn)) %>%
     mutate(next_next_next_turn = lead(next_next_turn)) %>%
     filter(!is.na(next_next_next_turn)) %>%
-    mutate(tetragram = paste0(turn_direction, next_turn, next_next_turn, next_next_next_turn)) %>% # probably a better way to do this...
+    mutate(tetragram = paste0(turn_direction,
+                              next_turn,
+                              next_next_turn,
+                              next_next_next_turn)) %>% # probably a better way to do this...
     count(tetragram, name = "count") %>%
     mutate(percentage = count / sum(count) * 100) %>%
     ungroup()
