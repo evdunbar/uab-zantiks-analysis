@@ -188,12 +188,21 @@ process_genotypes <- function() {
 microtracker_analysis <- function() {
   data <- read_xlsx(DATA_FILE, sheet = "report", skip = 25, n_max = 96) %>%
     select(Well, `30`, `60`, `90`, `120`) %>%
-    mutate(average = rowMeans(across(c(`30`, `60`, `90`, `120`))))
+    mutate(average = rowMeans(across(c(`30`, `60`, `90`, `120`)))) %>%
+    mutate(row = str_extract(Well, "[A-H]"), col = as.integer(str_extract(Well, "[0-9]+"))) %>%
+    arrange(row, col) %>%
+    mutate(row_id = row_number())
 
-  genotypes <- process_genotypes()
-  print(genotypes)
+  genotypes <- process_genotypes() %>%
+    select(genotype, row_id)
 
-  return(data)
+  finished_data <- data %>%
+    full_join(genotypes, by = join_by(row_id)) %>%
+    relocate(genotype) %>%
+    select(genotype, average) %>%
+    arrange(genotype)
+
+  return(finished_data)
 }
 
 y_maze_analysis <- function() {
@@ -250,4 +259,5 @@ y_maze_analysis <- function() {
   return(processed_data)
 }
 
-microtracker_analysis()
+output <- microtracker_analysis()
+write_csv(output, "output.csv")
