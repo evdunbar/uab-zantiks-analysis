@@ -1,21 +1,55 @@
 #!/usr/bin/env Rscript
 
+########
+# GOAL #
+########
+# This script is to process microtracker/zantiks data along with genotyping data (from HRM)
+# and output a file to copy and paste into Prism
+
+
 ##############
 # PARAMETERS #
 ##############
 
-# Input the data file path
-DATA_FILE <- "2024/06/11/mt_plate_2_25um_amantadine_clutch_1_6_dpf_rb.xlsx"
+# Input the data file paths
+# DATA_FILE_PREFIX will be prepended to every string in DATA_FILES
+DATA_FILE_PREFIX <- "2024/"
+DATA_FILES <- c(
+  "11/01/ymaze_15/a/ymaze_15-20241101T164208.csv",
+  "11/01/ymaze_15/b/ymaze_15-20241101T175733.csv",
+  "11/01/ymaze_15/c/ymaze_15-20241101T191455.csv",
+  "11/01/ymaze_15/d/ymaze_15-20241101T202944.csv",
+  "11/04/ymaze_15/a/ymaze_15-20241104T170903.csv",
+  "11/04/ymaze_15/b/ymaze_15-20241104T182427.csv",
+  "11/04/ymaze_15/c/ymaze_15-20241104T194506.csv",
+  "12/09/ymaze_15/a/ymaze_15-20241209T121317.csv",
+  "12/09/ymaze_15/b/ymaze_15-20241209T130440.csv",
+  "12/09/ymaze_15/c/ymaze_15-20241209T142016.csv"
+)
 
-# Input the genotyping file path
-GENOTYPING_FILE <- "2024/06/11/genotypes.csv"
+# Input the genotyping file paths
+# Each genotyping file corresponds to one data file
+# GENOTYPING_FILE_PREFIX will be prepended to every string in GENOTYPING_FILES
+GENOTYPING_FILE_PREFIX <- "2024/"
+GENOTYPING_FILES <- c(
+  "11/01/genotypes.csv",
+  "11/01/genotypes.csv",
+  "11/01/genotypes.csv",
+  "11/01/genotypes.csv",
+  "11/04/genotypes.csv",
+  "11/04/genotypes.csv",
+  "11/04/genotypes.csv",
+  "12/09/genotypes.csv",
+  "12/09/genotypes.csv",
+  "12/09/genotypes.csv"
+)
 
-# What do you want the output to be saved to?
+# Where should the output to be saved to?
 # Name should end with .csv
 # Leave empty for default of "output.csv"
 OUTPUT_FILE <- ""
 
-# Choose an assay type from:
+# Choose assay types from:
 #   - light/dark preference
 #   - light/dark transition
 #   - microtracker
@@ -24,30 +58,46 @@ OUTPUT_FILE <- ""
 #   - startle response/pre-pulse inhibition
 #   - y-maze 15
 #   - y-maze 4
-ASSAY_NAME <- "microtracker"
+#
+# Each row corresponds to a data file
+ASSAY_NAMEs <- c(
+  "y-maze 15",
+  "y-maze 15",
+  "y-maze 15",
+  "y-maze 15",
+  "y-maze 15",
+  "y-maze 15",
+  "y-maze 15",
+  "y-maze 15",
+  "y-maze 15",
+  "y-maze 15"
+)
 
 # How do you want to specify fish? (sorry this is a lot of questions)
 #   - Do you want to answer in terms of 48 or 96-well plate labelling?
-#       48-well:            96-well:
-#          1 2 3 4 5 6 7 8     1  2  3  4  5  6  7  8  9 10 11 12
-#        A . . . . . . . .   A .  .  .  .  .  .  .  .  .  .  .  .
-#        B . . . . . . . .   B .  .  .  .  .  .  .  .  .  .  .  .
-#        C . . . . . . . .   C .  .  .  .  .  .  .  .  .  .  .  .
-#        D . . . . . . . .   D .  .  .  .  .  .  .  .  .  .  .  .
-#        E . . . . . . . .   E .  .  .  .  .  .  .  .  .  .  .  .
-#        F . . . . . . . .   F .  .  .  .  .  .  .  .  .  .  .  .
-#                            G .  .  .  .  .  .  .  .  .  .  .  .
-#                            H .  .  .  .  .  .  .  .  .  .  .  .
-LABELLING_TYPE <- 96
+#     48-well:      96-well:
+#      1 2 3 4 5 6 7 8   1  2  3  4  5  6  7  8  9 10 11 12
+#    A . . . . . . . .   A .  .  .  .  .  .  .  .  .  .  .  .
+#    B . . . . . . . .   B .  .  .  .  .  .  .  .  .  .  .  .
+#    C . . . . . . . .   C .  .  .  .  .  .  .  .  .  .  .  .
+#    D . . . . . . . .   D .  .  .  .  .  .  .  .  .  .  .  .
+#    E . . . . . . . .   E .  .  .  .  .  .  .  .  .  .  .  .
+#    F . . . . . . . .   F .  .  .  .  .  .  .  .  .  .  .  .
+#                        G .  .  .  .  .  .  .  .  .  .  .  .
+#                        H .  .  .  .  .  .  .  .  .  .  .  .
+LABELLING_TYPE <- 48
 #   - If 48-well, YOU MUST specify if left half, right half, or top left within the 96-well genotyping plate
 LOCATION_48 <- "left half"
 #   - Count down columns or across rows first?
-COLUMN_OR_ROW_FIRST <- "row"
+COLUMN_OR_ROW_FIRST <- "column"
 
 # Which fish were used in this assay?
 #   - Use the same order as the assay machine
 #   - You can include ranges (e.g. "A1-B3") and individual wells (e.g. "F5")
-FISH_USED <- c("A1-H12")
+# FISH_USED <- c("A1-F2")
+# FISH_USED <- c("A3-F4")
+FISH_USED <- c("A5-F6")
+# FISH_USED <- c("A7-F8")
 
 
 ############
@@ -75,7 +125,7 @@ process_genotypes <- function() {
     select(genotyping_well = Well, genotype = Cluster) %>%
     filter(genotype %in% c("HET", "HOM", "WT")) %>%
     mutate(well_id = as.integer((match(substr(genotyping_well, 1, 1), LETTERS[1:8]) - 1) * 12 +
-                                  as.integer(substr(genotyping_well, 2, 3)) - 1))
+      as.integer(substr(genotyping_well, 2, 3)) - 1))
 
   # create matrices to help with computations
   equivalence_matrix <- matrix(0:95, nrow = 8, ncol = 12, byrow = TRUE)
@@ -102,8 +152,9 @@ process_genotypes <- function() {
     stop("LABELLING_TYPE must be either 48 or 96")
   }
   labeling_matrix <- matrix(outer(LETTERS[1:num_rows], sprintf("%d", 1:num_cols), FUN = paste0),
-                            nrow = num_rows,
-                            ncol = num_cols)
+    nrow = num_rows,
+    ncol = num_cols
+  )
 
   # get matrix positions to access well id
   used_matrix <- matrix(FALSE, nrow = nrow(labeling_matrix), ncol = ncol(labeling_matrix))
@@ -188,7 +239,7 @@ process_genotypes <- function() {
 microtracker_analysis <- function() {
   data <- read_xlsx(DATA_FILE, sheet = "report", skip = 25, n_max = 96) %>%
     select(Well, `30`, `60`, `90`, `120`) %>%
-    mutate(average = rowMeans(across(c(`30`, `60`, `90`, `120`)))) %>%
+    mutate(`Average Locomotor Activity` = rowMeans(across(c(`30`, `60`, `90`, `120`)))) %>%
     mutate(row = str_extract(Well, "[A-H]"), col = as.integer(str_extract(Well, "[0-9]+"))) %>%
     arrange(row, col) %>%
     mutate(row_id = row_number())
@@ -199,7 +250,7 @@ microtracker_analysis <- function() {
   finished_data <- data %>%
     full_join(genotypes, by = join_by(row_id)) %>%
     relocate(genotype) %>%
-    select(genotype, average) %>%
+    select(genotype, `Average Locomotor Activity`) %>%
     arrange(genotype)
 
   return(finished_data)
@@ -240,13 +291,19 @@ y_maze_analysis <- function() {
     mutate(next_next_turn = lead(next_turn)) %>%
     mutate(next_next_next_turn = lead(next_next_turn)) %>%
     filter(!is.na(next_next_next_turn)) %>%
-    mutate(tetragram = paste0(turn_direction,
-                              next_turn,
-                              next_next_turn,
-                              next_next_next_turn)) %>% # probably a better way to do this...
+    mutate(tetragram = paste0(
+      turn_direction,
+      next_turn,
+      next_next_turn,
+      next_next_next_turn
+    )) %>% # probably a better way to do this...
     count(tetragram, name = "count") %>%
     mutate(percentage = count / sum(count) * 100) %>%
-    ungroup()
+    summarize(
+      alternations = sum(count[tetragram %in% c("LRLR", "RLRL")]) / sum(count),
+      repetitions = sum(count[tetragram %in% c("LLLL", "RRRR")]) / sum(count),
+      turns = sum(count)
+    )
 
   # add genotyping
   genotyping_data <- process_genotypes() %>%
@@ -254,10 +311,14 @@ y_maze_analysis <- function() {
   processed_data <- processed_data %>%
     left_join(genotyping_data, by = join_by(ARENA == row_id)) %>%
     relocate(genotype) %>%
-    arrange(genotype)
+    arrange(genotype) %>%
+    select(genotype, alternations, repetitions, turns)
 
   return(processed_data)
 }
 
-output <- microtracker_analysis()
+if (ASSAY_NAME == "y-maze 15") {
+  output <- y_maze_analysis()
+}
+
 write_csv(output, "output.csv")
