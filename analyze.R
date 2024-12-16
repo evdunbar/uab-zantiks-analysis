@@ -258,4 +258,9 @@ for (idx in seq_along(DATA_FILES)) {
 }
 
 all_data <- all_data %>% arrange(genotype)
+if (OUTPUT_FILE == "") {
+  write_csv(all_data, "output.csv")
+} else {
+  write_csv(all_data, OUTPUT_FILE)
+}
 print(all_data)
