@@ -11,6 +11,10 @@
 # PARAMETERS #
 ##############
 
+# If you would prefer to use a configuration file,
+# please input that here
+CONFIG_FILE <- "configs/jip3_test/ymaze_15.toml"
+
 # Input the data file paths
 # DATA_FILE_PREFIX will be prepended to every string in DATA_FILES
 DATA_FILE_PREFIX <- "2024/"
@@ -110,6 +114,7 @@ library(tidyverse)
 library(dplyr)
 library(readr)
 library(readxl)
+if (CONFIG_FILE != "") library(configr)
 
 # turn full genotype file into a table that can be merged with the data
 process_genotypes <- function(genotyping_file, fish_used_file, counting_direction) {
