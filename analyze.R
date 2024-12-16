@@ -22,7 +22,7 @@ DATA_FILES <- c(
   "11/04/ymaze_15/a/ymaze_15-20241104T170903.csv",
   "11/04/ymaze_15/b/ymaze_15-20241104T182427.csv",
   "11/04/ymaze_15/c/ymaze_15-20241104T194506.csv",
-  "12/09/ymaze_15/a/ymaze_15-20241209T121317.csv",
+  # "12/09/ymaze_15/a/ymaze_15-20241209T121317.csv",
   "12/09/ymaze_15/b/ymaze_15-20241209T130440.csv",
   "12/09/ymaze_15/c/ymaze_15-20241209T142016.csv"
 )
@@ -39,7 +39,7 @@ GENOTYPING_FILES <- c(
   "11/04/genotypes.csv",
   "11/04/genotypes.csv",
   "11/04/genotypes.csv",
-  "12/09/genotypes.csv",
+  # "12/09/genotypes.csv",
   "12/09/genotypes.csv",
   "12/09/genotypes.csv"
 )
@@ -68,7 +68,7 @@ ASSAY_NAMES <- c(
   "y-maze 15",
   "y-maze 15",
   "y-maze 15",
-  "y-maze 15",
+  # "y-maze 15",
   "y-maze 15",
   "y-maze 15"
 )
@@ -84,7 +84,7 @@ FISH_USED <- c(
   "11/04/ymaze_15/a/fish_used.txt",
   "11/04/ymaze_15/b/fish_used.txt",
   "11/04/ymaze_15/c/fish_used.txt",
-  "12/09/ymaze_15/a/fish_used.txt",
+  # "12/09/ymaze_15/a/fish_used.txt",
   "12/09/ymaze_15/b/fish_used.txt",
   "12/09/ymaze_15/c/fish_used.txt"
 )
@@ -96,7 +96,7 @@ COUNTING_DIRECTIONS <- c(
   "across",
   "across",
   "across",
-  "across",
+  # "across",
   "across",
   "across"
 )
@@ -129,21 +129,32 @@ process_genotypes <- function(genotyping_file, fish_used_file, counting_directio
 
   # get which wells were used
   wells_used <- label_matrix[fish_used_data == "x"]
-  if (counting_direction == "across") {
-    wells_used <- sort(wells_used)
-  }
 
   # read in data that matches valid genotypes
   genotype_data <- read_csv(genotyping_file) %>%
     select(genotyping_well = Well, genotype = Cluster) %>%
-    filter(genotype %in% c("HET", "HOM", "WT")) %>%
-    filter(genotyping_well %in% wells_used)
+    filter(genotype %in% c("HET", "HOM", "WT")) %>% # do i want this?
+    filter(genotyping_well %in% wells_used) %>%
+    mutate(row = str_extract(genotyping_well, "[A-H]"), column = as.integer(str_extract(genotyping_well, "[0-9]+")))
 
-  print(genotype_data)
+  # sort by row or column
+  if (counting_direction == "across") {
+    genotype_data <- genotype_data %>%
+      arrange(row, column)
+  } else {
+    genotype_data <- genotype_data %>%
+      arrange(column, row)
+  }
+
+  # add row ids to join on
+  genotype_data <- genotype_data %>%
+    mutate(row_id = row_number())
+
+  return(genotype_data)
 }
 
-microtracker_analysis <- function() {
-  data <- read_xlsx(DATA_FILE, sheet = "report", skip = 25, n_max = 96) %>%
+microtracker_analysis <- function(data_file, genotypes) {
+  data <- read_xlsx(data_file, sheet = "report", skip = 25, n_max = 96) %>%
     select(Well, `30`, `60`, `90`, `120`) %>%
     mutate(`Average Locomotor Activity` = rowMeans(across(c(`30`, `60`, `90`, `120`)))) %>%
     mutate(row = str_extract(Well, "[A-H]"), col = as.integer(str_extract(Well, "[0-9]+"))) %>%
@@ -162,10 +173,10 @@ microtracker_analysis <- function() {
   return(finished_data)
 }
 
-y_maze_analysis <- function() {
+y_maze_analysis <- function(data_file, genotypes) {
   # read the file and get rid of the auto generated zantiks lines
   # they would mess up csv parsing
-  lines <- readLines(DATA_FILE)
+  lines <- readLines(data_file)
   csv_text <- lines[4:(length(lines) - 1)]
   data <- read_csv(I(csv_text), col_types = "dccici")
 
@@ -212,10 +223,8 @@ y_maze_analysis <- function() {
     )
 
   # add genotyping
-  genotyping_data <- process_genotypes() %>%
-    select(row_id, genotype)
   processed_data <- processed_data %>%
-    left_join(genotyping_data, by = join_by(ARENA == row_id)) %>%
+    left_join(genotypes, by = join_by(ARENA == row_id)) %>%
     relocate(genotype) %>%
     arrange(genotype) %>%
     select(genotype, alternations, repetitions, turns)
@@ -232,7 +241,21 @@ for (idx in seq_along(DATA_FILES)) {
   assay_name <- ASSAY_NAMES[idx]
   counting_direction <- COUNTING_DIRECTIONS[idx]
 
-  process_genotypes(genotyping_file, fish_used_file, counting_direction)
+  genotypes <- process_genotypes(genotyping_file, fish_used_file, counting_direction)
 
-  # write_csv(output, "output.csv")
+  if (assay_name == "light/dark preference") {
+  } else if (assay_name == "microtracker") {
+    data <- microtracker_analysis(data_file, genotypes)
+  } else if (assay_name == "y-maze 15") {
+    data <- y_maze_analysis(data_file, genotypes)
+  }
+
+  if (idx == 1) {
+    all_data <- data
+  } else {
+    all_data <- bind_rows(all_data, data)
+  }
 }
+
+all_data <- all_data %>% arrange(genotype)
+print(all_data)
