@@ -1,0 +1,13 @@
+[data]
+files_prefix = ""
+files = []
+assay_names = []
+
+[genotypes]
+files_prefix = ""
+files = []
+counting_directions = []
+
+[fish_used]
+files_prefix = ""
+files = []
