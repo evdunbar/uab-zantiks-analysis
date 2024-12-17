@@ -1,0 +1,25 @@
+[data]
+files_prefix = "2024/12/09/zantiks_"
+files = [
+    "a/light_dark_transition-20241209T093738.csv",
+    "b/light_dark_transition-20241209T093756.csv"
+]
+assay_names = [
+    "light/dark transition",
+    "light/dark transition"
+]
+
+[genotypes]
+files_prefix = "2024/12/09/genotypes.csv"
+files = ["", ""] # use just the prefix because same file
+counting_directions = [
+    "down",
+    "down",
+]
+
+[fish_used]
+files_prefix = "2024/12/09/zantiks_"
+files = [
+    "a/fish_used.txt",
+    "b/fish_used.txt"
+]

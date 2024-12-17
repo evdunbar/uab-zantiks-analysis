@@ -13,8 +13,7 @@
 
 # If you would prefer to use a configuration file,
 # please input that here
-# CONFIG_FILE <- "configs/jip3_test/ymaze_15.toml"
-CONFIG_FILE <- ""
+CONFIG_FILE <- "configs/jip3_test/light_dark_transition.toml"
 
 # Input the data file paths
 # DATA_FILE_PREFIX will be prepended to every string in DATA_FILES
@@ -74,18 +73,19 @@ if (CONFIG_FILE != "") {
   load_config <- function() {
     config <- read.config(CONFIG_FILE)
 
-    DATA_FILE_PREFIX <- config$data$files_prefix
-    DATA_FILES <- config$data$files
+    # use <<- instead of <- to assign to the global variables
+    DATA_FILE_PREFIX <<- config$data$files_prefix
+    DATA_FILES <<- config$data$files
 
-    GENOTYPING_FILE_PREFIX <- config$genotypes$files_prefix
-    GENOTYPING_FILES <- config$genotypes$files
+    GENOTYPING_FILE_PREFIX <<- config$genotypes$files_prefix
+    GENOTYPING_FILES <<- config$genotypes$files
 
-    ASSAY_NAMES <- config$data$assay_names
+    ASSAY_NAMES <<- config$data$assay_names
 
-    FISH_USED_PREFIX <- config$fish_used$files_prefix
-    FISH_USED <- config$fish_used$files
+    FISH_USED_PREFIX <<- config$fish_used$files_prefix
+    FISH_USED <<- config$fish_used$files
 
-    COUNTING_DIRECTIONS <- config$genotypes$counting_directions
+    COUNTING_DIRECTIONS <<- config$genotypes$counting_directions
   }
 } else {
   USING_CONFIG <- FALSE
@@ -97,7 +97,7 @@ validate_inputs <- function() {
   required_values <- list(DATA_FILES, GENOTYPING_FILES, ASSAY_NAMES, FISH_USED, COUNTING_DIRECTIONS)
   for (required_value in required_values) {
     if (length(required_value) < 1) {
-      print(requried_value)
+      print(required_value)
       stop("DATA_FILES, GENOTYPING_FILES, ASSAY_NAMES, FISH_USED, and COUNTING_DIRECTIONS must not be empty")
     }
   }
@@ -180,6 +180,32 @@ process_genotypes <- function(genotyping_file, fish_used_file, counting_directio
 #####################################
 # ASSAY SPECIFIC ANALYSIS FUNCTIONS #
 #####################################
+
+light_dark_transition_analysis <- function(data_file, genotypes) {
+  lines <- readLines(data_file)
+  csv_text <- lines[4:(length(lines) - 1)]
+  data <- read_csv(I(csv_text),col_types = "dcidddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd")
+
+  processed_data <- data %>%
+    pivot_longer(cols = A1_Z1:A48_Z2,
+                 names_to = c("ARENA", "ZONE"),
+                 names_pattern = "A([0-9]+)_Z([1,2])",
+                 values_to = "DISTANCE") %>%
+    mutate(ARENA = as.integer(ARENA), ZONE = as.integer(ZONE)) %>%
+    relocate(ARENA, ZONE) %>%
+    arrange(ARENA, ZONE) %>%
+    group_by(ARENA) %>%
+    summarize(`light/dark ratio` = sum(DISTANCE[CONDITION == "BRIGHT"]) / sum(DISTANCE[CONDITION == "DARK"]),
+              thigmotaxis = sum(DISTANCE[ZONE == 2]) / sum(DISTANCE))
+
+  finished_data <- processed_data %>%
+    left_join(genotypes, by = join_by(ARENA == row_id)) %>%
+    relocate(genotype) %>%
+    arrange(genotype) %>%
+    select(genotype, `light/dark ratio`, thigmotaxis)
+
+  return(finished_data)
+}
 
 microtracker_analysis <- function(data_file, genotypes) {
   data <- read_xlsx(data_file, sheet = "report", skip = 25, n_max = 96) %>%
@@ -283,6 +309,8 @@ for (idx in seq_along(DATA_FILES)) {
   genotypes <- process_genotypes(genotyping_file, fish_used_file, counting_direction)
 
   if (assay_name == "light/dark preference") {
+  } else if (assay_name == "light/dark transition") {
+    data <- light_dark_transition_analysis(data_file, genotypes)
   } else if (assay_name == "microtracker") {
     data <- microtracker_analysis(data_file, genotypes)
   } else if (assay_name == "y-maze 15") {
