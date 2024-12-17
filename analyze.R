@@ -13,45 +13,24 @@
 
 # If you would prefer to use a configuration file,
 # please input that here
-CONFIG_FILE <- "configs/jip3_test/ymaze_15.toml"
+# CONFIG_FILE <- "configs/jip3_test/ymaze_15.toml"
+CONFIG_FILE <- ""
 
 # Input the data file paths
 # DATA_FILE_PREFIX will be prepended to every string in DATA_FILES
-DATA_FILE_PREFIX <- "2024/"
+DATA_FILE_PREFIX <- ""
 DATA_FILES <- c(
-  "11/01/ymaze_15/a/ymaze_15-20241101T164208.csv",
-  "11/01/ymaze_15/b/ymaze_15-20241101T175733.csv",
-  "11/01/ymaze_15/c/ymaze_15-20241101T191455.csv",
-  "11/01/ymaze_15/d/ymaze_15-20241101T202944.csv",
-  "11/04/ymaze_15/a/ymaze_15-20241104T170903.csv",
-  "11/04/ymaze_15/b/ymaze_15-20241104T182427.csv",
-  "11/04/ymaze_15/c/ymaze_15-20241104T194506.csv",
-  # "12/09/ymaze_15/a/ymaze_15-20241209T121317.csv",
-  "12/09/ymaze_15/b/ymaze_15-20241209T130440.csv",
-  "12/09/ymaze_15/c/ymaze_15-20241209T142016.csv"
 )
 
 # Input the genotyping file paths
 # Each genotyping file corresponds to one data file
 # GENOTYPING_FILE_PREFIX will be prepended to every string in GENOTYPING_FILES
-GENOTYPING_FILE_PREFIX <- "2024/"
+GENOTYPING_FILE_PREFIX <- ""
 GENOTYPING_FILES <- c(
-  "11/01/genotypes.csv",
-  "11/01/genotypes.csv",
-  "11/01/genotypes.csv",
-  "11/01/genotypes.csv",
-  "11/04/genotypes.csv",
-  "11/04/genotypes.csv",
-  "11/04/genotypes.csv",
-  # "12/09/genotypes.csv",
-  "12/09/genotypes.csv",
-  "12/09/genotypes.csv"
 )
-
-# Where should the output to be saved to?
-# Name should end with .csv
-# Leave empty for default of "output.csv"
-OUTPUT_FILE <- ""
+# COUNTING_DIRECTIONS can be either across or down
+COUNTING_DIRECTIONS <- c(
+)
 
 # Choose assay types from:
 #   - light/dark preference
@@ -65,56 +44,95 @@ OUTPUT_FILE <- ""
 #
 # Each row corresponds to a data file
 ASSAY_NAMES <- c(
-  "y-maze 15",
-  "y-maze 15",
-  "y-maze 15",
-  "y-maze 15",
-  "y-maze 15",
-  "y-maze 15",
-  "y-maze 15",
-  # "y-maze 15",
-  "y-maze 15",
-  "y-maze 15"
 )
 
 # Input the fish used paths
-# COUNTING_DIRECTIONS can be either across or down
-FISH_USED_PREFIX <- "2024/"
+FISH_USED_PREFIX <- ""
 FISH_USED <- c(
-  "11/01/ymaze_15/a/fish_used.txt",
-  "11/01/ymaze_15/b/fish_used.txt",
-  "11/01/ymaze_15/c/fish_used.txt",
-  "11/01/ymaze_15/d/fish_used.txt",
-  "11/04/ymaze_15/a/fish_used.txt",
-  "11/04/ymaze_15/b/fish_used.txt",
-  "11/04/ymaze_15/c/fish_used.txt",
-  # "12/09/ymaze_15/a/fish_used.txt",
-  "12/09/ymaze_15/b/fish_used.txt",
-  "12/09/ymaze_15/c/fish_used.txt"
-)
-COUNTING_DIRECTIONS <- c(
-  "across",
-  "across",
-  "across",
-  "across",
-  "across",
-  "across",
-  "across",
-  # "across",
-  "across",
-  "across"
 )
 
+# Where should the output to be saved to?
+# Name should end with .csv
+# Leave empty for default of "output.csv"
+OUTPUT_FILE <- ""
 
-############
-# ANALYSIS #
-############
+
+###########################
+# FUNCTIONS AND LIBRARIES #
+###########################
 
 library(tidyverse)
 library(dplyr)
 library(readr)
 library(readxl)
-if (CONFIG_FILE != "") library(configr)
+if (CONFIG_FILE != "") {
+  library(configr)
+
+  USING_CONFIG <- TRUE
+
+  # uses global CONFIG_FILE variable
+  load_config <- function() {
+    config <- read.config(CONFIG_FILE)
+
+    DATA_FILE_PREFIX <- config$data$files_prefix
+    DATA_FILES <- config$data$files
+
+    GENOTYPING_FILE_PREFIX <- config$genotypes$files_prefix
+    GENOTYPING_FILES <- config$genotypes$files
+
+    ASSAY_NAMES <- config$data$assay_names
+
+    FISH_USED_PREFIX <- config$fish_used$files_prefix
+    FISH_USED <- config$fish_used$files
+
+    COUNTING_DIRECTIONS <- config$genotypes$counting_directions
+  }
+} else {
+  USING_CONFIG <- FALSE
+}
+
+# uses global variables, so no direct inputs
+validate_inputs <- function() {
+  # these values are required
+  required_values <- list(DATA_FILES, GENOTYPING_FILES, ASSAY_NAMES, FISH_USED, COUNTING_DIRECTIONS)
+  for (required_value in required_values) {
+    if (length(required_value) < 1) {
+      print(requried_value)
+      stop("DATA_FILES, GENOTYPING_FILES, ASSAY_NAMES, FISH_USED, and COUNTING_DIRECTIONS must not be empty")
+    }
+  }
+
+  # all required values need to have the same length to match up
+  if (length(unique(map(required_values, length))) != 1) {
+    for (required_value in required_values) {
+      print("lengths:")
+      print(length(required_value))
+    }
+    stop("DATA_FILES, GENOTYPING_FILES, ASSAY_NAMES, FISH_USED, and COUNTING_DIRECTIONS must be the same length")
+  }
+
+  # we have to know how to analyze an assay
+  valid_assay_names <- c("light/dark preference",
+                         "light/dark transition",
+                         "microtracker",
+                         "mirror biting",
+                         "social preference",
+                         "startle response/pre-pulse inhibition",
+                         "y-maze 15",
+                         "y-maze 4")
+  if (!all(ASSAY_NAMES %in% valid_assay_names)) {
+    print("assay names:")
+    print(ASSAY_NAMES)
+    stop("ASSAY_NAMES must all match one of the options in the list")
+  }
+
+  valid_counting_directions <- c("down", "across")
+  if (!all(COUNTING_DIRECTIONS %in% valid_counting_directions)) {
+    print("counting directions:")
+    print(COUNTING_DIRECTIONS)
+    stop("COUNTING_DIRECTIONS must all match \"down\" or \"across\"")
+  }
+}
 
 # turn full genotype file into a table that can be merged with the data
 process_genotypes <- function(genotyping_file, fish_used_file, counting_direction) {
@@ -157,6 +175,11 @@ process_genotypes <- function(genotyping_file, fish_used_file, counting_directio
 
   return(genotype_data)
 }
+
+
+#####################################
+# ASSAY SPECIFIC ANALYSIS FUNCTIONS #
+#####################################
 
 microtracker_analysis <- function(data_file, genotypes) {
   data <- read_xlsx(data_file, sheet = "report", skip = 25, n_max = 96) %>%
@@ -237,7 +260,18 @@ y_maze_analysis <- function(data_file, genotypes) {
   return(processed_data)
 }
 
-# main loop!
+
+################
+# MAIN PROGRAM #
+################
+
+if (USING_CONFIG) {
+  load_config()
+}
+
+# validate user inputs here so we can assume they are right later
+validate_inputs()
+
 for (idx in seq_along(DATA_FILES)) {
   # get correct files by corresponding index
   data_file <- paste0(DATA_FILE_PREFIX, DATA_FILES[idx])
