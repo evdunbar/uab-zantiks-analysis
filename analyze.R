@@ -196,7 +196,7 @@ light_dark_transition_analysis <- function(data_file, genotypes) {
     arrange(ARENA, ZONE) %>%
     group_by(ARENA) %>%
     summarize(`light/dark ratio` = sum(DISTANCE[CONDITION == "BRIGHT"]) / sum(DISTANCE[CONDITION == "DARK"]),
-              thigmotaxis = sum(DISTANCE[ZONE == 2]) / sum(DISTANCE))
+              thigmotaxis = sum(DISTANCE[ZONE == 1]) / sum(DISTANCE))
 
   finished_data <- processed_data %>%
     left_join(genotypes, by = join_by(ARENA == row_id)) %>%
@@ -223,6 +223,28 @@ microtracker_analysis <- function(data_file, genotypes) {
     relocate(genotype) %>%
     select(genotype, `Average Locomotor Activity`) %>%
     arrange(genotype)
+
+  return(finished_data)
+}
+
+startle_response_analysis <- function(data_file, genotypes) {
+  lines <- readLines(data_file)
+  csv_text <- lines[4:(length(lines) - 1)]
+  data <- read_csv(I(csv_text), col_types = "ddcdddddddddddddddddddddddddddddddddddddddddddddddd")
+
+  processed_data <- data %>%
+    pivot_longer(cols = A1:A48, names_to = "ARENA", names_pattern = "A([0-9]+)", values_to = "DISTANCE") %>%
+    mutate(ARENA = as.integer(ARENA)) %>%
+    relocate(ARENA) %>%
+    arrange(ARENA) %>%
+    group_by(ARENA) %>%
+    summarize(`pre-pulse` = sum(DISTANCE[PHASE == "PREPULSE"]), `startle alone` = sum(DISTANCE[PHASE == "STARTLE"]))
+
+  finished_data <- processed_data %>%
+    left_join(genotypes, by = join_by(ARENA == row_id)) %>%
+    relocate(genotype) %>%
+    arrange(genotype) %>%
+    select(genotype, `pre-pulse`, `startle alone`)
 
   return(finished_data)
 }
@@ -313,6 +335,8 @@ for (idx in seq_along(DATA_FILES)) {
     data <- light_dark_transition_analysis(data_file, genotypes)
   } else if (assay_name == "microtracker") {
     data <- microtracker_analysis(data_file, genotypes)
+  } else if (assay_name == "startle response/pre-pulse inhibition") {
+    data <- startle_response_analysis(data_file, genotypes)
   } else if (assay_name == "y-maze 15") {
     data <- y_maze_analysis(data_file, genotypes)
   }
