@@ -1,0 +1,13 @@
+[data]
+files_prefix = "2024/12/09/light_dark_preference/"
+files = []
+assay_names = []
+
+[genotypes]
+files_prefix = "2024/12/09/genotypes.csv"
+files = ["", "", ""]
+counting_directions = []
+
+[fish_used]
+files_prefix = "2024/12/09/light_dark_preference/"
+files = []
