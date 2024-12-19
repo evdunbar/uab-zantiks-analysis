@@ -13,7 +13,7 @@
 
 # If you would prefer to use a configuration file,
 # please input that here
-CONFIG_FILE <- "configs/jip3_test/light_dark_transition.toml"
+CONFIG_FILE <- "configs/jip3_test/ymaze_15.toml"
 
 # Input the data file paths
 # DATA_FILE_PREFIX will be prepended to every string in DATA_FILES
@@ -181,10 +181,40 @@ process_genotypes <- function(genotyping_file, fish_used_file, counting_directio
 # ASSAY SPECIFIC ANALYSIS FUNCTIONS #
 #####################################
 
+light_dark_preference_analysis <- function(data_file, genotypes) {
+  lines <- readLines(data_file)
+  csv_text <- lines[4:(length(lines) - 1)]
+  data <- read_csv(I(csv_text), col_types = "dicdddddddddddddddddddddddd")
+
+  processed_data <- data %>%
+    pivot_longer(cols = A1_Z1:A12_Z2,
+                 names_to = c("ARENA", "ZONE"),
+                 names_pattern = "A([0-9]+)_Z([1,2])",
+                 values_to = "VALUE") %>%
+    mutate(ARENA = as.integer(ARENA), ZONE = as.integer(ZONE)) %>%
+    relocate(ARENA, ZONE) %>%
+    arrange(ARENA, ZONE) %>%
+    mutate(ZONE = case_when(ARENA %in% c(5, 6, 7, 8) & ZONE == 1 ~ 3, .default = ZONE)) %>% # swap zone numbers
+    mutate(ZONE = case_when(ARENA %in% c(5, 6, 7, 8) & ZONE == 2 ~ 1, .default = ZONE)) %>% # now 1 is always dark
+    mutate(ZONE = case_when(ARENA %in% c(5, 6, 7, 8) & ZONE == 3 ~ 2, .default = ZONE)) %>% # and 2 is always light
+    group_by(ARENA) %>%
+    summarize(`light time` = sum(VALUE[ENDPOINT == "TIME_SPENT_IN_ZONE" & ZONE == 2]),
+              `light distance percent` = sum(VALUE[ENDPOINT == "DISTANCE_IN_ZONE" & ZONE == 2]) /
+                sum(VALUE[ENDPOINT == "DISTANCE_IN_ZONE"]))
+
+  finished_data <- processed_data %>%
+    left_join(genotypes, by = join_by(ARENA == row_id)) %>%
+    relocate(genotype) %>%
+    arrange(genotype) %>%
+    select(genotype, `light time`, `light distance percent`)
+
+  return(finished_data)
+}
+
 light_dark_transition_analysis <- function(data_file, genotypes) {
   lines <- readLines(data_file)
   csv_text <- lines[4:(length(lines) - 1)]
-  data <- read_csv(I(csv_text),col_types = "dcidddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd")
+  data <- read_csv(I(csv_text), col_types = "dcidddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd")
 
   processed_data <- data %>%
     pivot_longer(cols = A1_Z1:A48_Z2,
@@ -331,6 +361,7 @@ for (idx in seq_along(DATA_FILES)) {
   genotypes <- process_genotypes(genotyping_file, fish_used_file, counting_direction)
 
   if (assay_name == "light/dark preference") {
+    data <- light_dark_preference_analysis(data_file, genotypes)
   } else if (assay_name == "light/dark transition") {
     data <- light_dark_transition_analysis(data_file, genotypes)
   } else if (assay_name == "microtracker") {
