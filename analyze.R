@@ -3,6 +3,7 @@
 ########
 # GOAL #
 ########
+
 # This script is to process microtracker/zantiks data along with genotyping data (from HRM)
 # and output a file to copy and paste into Prism
 
@@ -238,7 +239,15 @@ light_dark_transition_analysis <- function(data_file, genotypes) {
 }
 
 microtracker_analysis <- function(data_file, genotypes) {
-  data <- read_xlsx(data_file, sheet = "report", skip = 25, n_max = 96) %>%
+  if (str_ends(data_file, ".xlsx")) {
+    data <- read_xlsx(data_file, skip = 25, n_max = 96)
+  } else if (str_ends(data_file, ".csv")) {
+    lines <- readLines(data_file)
+    csv_text <- lines[25:121]
+    data <- read_csv(I(csv_text), col_types = "cciiii")
+  }
+
+  data <- data %>%
     select(Well, `30`, `60`, `90`, `120`) %>%
     mutate(`Average Locomotor Activity` = rowMeans(across(c(`30`, `60`, `90`, `120`)))) %>%
     mutate(row = str_extract(Well, "[A-H]"), col = as.integer(str_extract(Well, "[0-9]+"))) %>%
