@@ -14,7 +14,7 @@
 
 # If you would prefer to use a configuration file,
 # please input that here
-CONFIG_FILE <- ""
+CONFIG_FILE <- "configs/jip3_test/ymaze_15.toml"
 
 # Input the data file paths
 # DATA_FILE_PREFIX will be prepended to every string in DATA_FILES
