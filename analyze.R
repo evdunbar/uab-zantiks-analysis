@@ -14,12 +14,13 @@
 
 # If you would prefer to use a configuration file,
 # please input that here
-CONFIG_FILE <- "configs/jip3_test/ymaze_15.toml"
+CONFIG_FILE <- ""
 
 # Input the data file paths
 # DATA_FILE_PREFIX will be prepended to every string in DATA_FILES
 DATA_FILE_PREFIX <- ""
 DATA_FILES <- c(
+  "2024/11/26/mt.csv"
 )
 
 # Input the genotyping file paths
@@ -27,9 +28,11 @@ DATA_FILES <- c(
 # GENOTYPING_FILE_PREFIX will be prepended to every string in GENOTYPING_FILES
 GENOTYPING_FILE_PREFIX <- ""
 GENOTYPING_FILES <- c(
+  "2024/11/01/genotypes.csv"
 )
 # COUNTING_DIRECTIONS can be either across or down
 COUNTING_DIRECTIONS <- c(
+  "across"
 )
 
 # Choose assay types from:
@@ -44,11 +47,13 @@ COUNTING_DIRECTIONS <- c(
 #
 # Each row corresponds to a data file
 ASSAY_NAMES <- c(
+  "microtracker"
 )
 
 # Input the fish used paths
 FISH_USED_PREFIX <- ""
 FISH_USED <- c(
+  "2024/12/09/zantiks_a/fish_used.txt"
 )
 
 # Where should the output to be saved to?
@@ -243,7 +248,7 @@ microtracker_analysis <- function(data_file, genotypes) {
     data <- read_xlsx(data_file, skip = 25, n_max = 96)
   } else if (str_ends(data_file, ".csv")) {
     lines <- readLines(data_file)
-    csv_text <- lines[25:121]
+    csv_text <- lines[26:122]
     data <- read_csv(I(csv_text), col_types = "cciiii")
   }
 
@@ -253,9 +258,6 @@ microtracker_analysis <- function(data_file, genotypes) {
     mutate(row = str_extract(Well, "[A-H]"), col = as.integer(str_extract(Well, "[0-9]+"))) %>%
     arrange(row, col) %>%
     mutate(row_id = row_number())
-
-  genotypes <- process_genotypes() %>%
-    select(genotype, row_id)
 
   finished_data <- data %>%
     full_join(genotypes, by = join_by(row_id)) %>%
