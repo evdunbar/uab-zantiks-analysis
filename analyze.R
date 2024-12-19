@@ -157,14 +157,15 @@ process_genotypes <- function(genotyping_file, fish_used_file, counting_directio
   )
 
   # get which wells were used
-  wells_used <- label_matrix[fish_used_data == "x"]
+  wells_used <- label_matrix[fish_used_data == "x" | fish_used_data == "X"]
 
   # read in data that matches valid genotypes
   genotype_data <- read_csv(genotyping_file) %>%
     select(genotyping_well = Well, genotype = Cluster) %>%
+    mutate(row = str_extract(genotyping_well, "[A-H]"), column = as.integer(str_extract(genotyping_well, "[0-9]+"))) %>%
+    mutate(genotyping_well = paste0(row, sprintf("%02d", column))) %>%
     filter(genotype %in% c("HET", "HOM", "WT")) %>% # do i want this?
-    filter(genotyping_well %in% wells_used) %>%
-    mutate(row = str_extract(genotyping_well, "[A-H]"), column = as.integer(str_extract(genotyping_well, "[0-9]+")))
+    filter(genotyping_well %in% wells_used)
 
   # sort by row or column
   if (counting_direction == "across") {
