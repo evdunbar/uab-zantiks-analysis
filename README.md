@@ -41,10 +41,28 @@
 ### Config Files
 
 - These files let you save the PARAMETERS used to run analysis for later
-- An example to start from is located in the [templates folder](templates/)
+- An example to start from is located in the [templates folder](templates/config.toml)
 - They are written in a file format called "toml"
     - `[` and `]` on their own line denote the name of a section
     - `"` and `"` surround a *string*
     - `[` and `]` on the right hand side of an `=` represent a list
     - The left hand side of an `=` is the name of a field/variable
     - `#` denotes the start of a comment; Everything to the right of this will not be read by the computer
+
+### Fish Used Files
+
+- These files denote both which fish were used in a specific assay and what fish got genotyped within a 96-well plate
+- An example to start from is located at [templates/fish_used.txt](templates/fish_used.txt)
+    - This example is a genotyping plate that is entirely empty
+- "O" (capital letter o) represents that this well *shouldn't* be included and "X" or "x" represents that this well *should* be included
+- For example, a full 96-well plate for a MicroTracker Run would look like this:
+```
+x x x x x x x x x x x x
+x x x x x x x x x x x x
+x x x x x x x x x x x x
+x x x x x x x x x x x x
+x x x x x x x x x x x x
+x x x x x x x x x x x x
+x x x x x x x x x x x x
+x x x x x x x x x x x x
+```
