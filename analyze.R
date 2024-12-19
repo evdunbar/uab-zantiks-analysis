@@ -4,21 +4,49 @@
 # GOAL #
 ########
 
-# This script is to process microtracker/zantiks data along with genotyping data (from HRM)
-# and output a file to copy and paste into Prism
+# To turn microtracker/zantiks data into data you can copy/paste into GraphPad Prism
 
+
+################
+# INSTRUCTIONS #
+################
+
+# - Read the info about each parameter below and fill in according to your desires
+# - If you need more info, check the README.md file
+# - All relative paths are relative to the working directory
 
 ##############
 # PARAMETERS #
 ##############
 
-# If you would prefer to use a configuration file,
-# please input that here
+# config_file:
+# - type:
+#   - string
+# - choices:
+#   1. ""
+#     - no config file specified - use the parameters defined in this file for analysis
+#   2. "relative/path/to/file.toml"
+#     - use the configuration options contained in the file located at this path
+#     - all other configuration options will be ignored
 CONFIG_FILE <- "configs/jip3_test/ymaze_15.toml"
 
-# Input the data file paths
-# DATA_FILE_PREFIX will be prepended to every string in DATA_FILES
+# data_file_prefix:
+# - type:
+#   - string
+# - choices:
+#   1. ""
+#     - nothing is prepended to the paths contained in data_files
+#   2. "relative/path"
+#     - prepend this string to each string in data_files
+#     - for example, if you had files y_maze/a/file.csv and y_maze/b/file.csv, then you
+#       could set this to "y_maze/" and then data_files would contain "a/file.csv" and
+#       "b/file.csv"
 DATA_FILE_PREFIX <- ""
+# data_files:
+# - type:
+#   - vector of strings
+# - one choice:
+#   1. a
 DATA_FILES <- c(
   "2024/11/26/mt.csv"
 )
