@@ -47,43 +47,81 @@ DATA_FILE_PREFIX <- ""
 # - type:
 #   - vector of strings
 # - one choice:
-#   1. a
+#   1. at least one "relative/path" separated by commas
+#   - should contain the raw output of a zantiks or microtracker run
+#   - pay attention to the order and use the same one for all other "vector of strings"
 DATA_FILES <- c(
 )
-
-# Input the genotyping file paths
-# Each genotyping file corresponds to one data file
-# GENOTYPING_FILE_PREFIX will be prepended to every string in GENOTYPING_FILES
-GENOTYPING_FILE_PREFIX <- ""
-GENOTYPING_FILES <- c(
-)
-# COUNTING_DIRECTIONS can be either across or down
-COUNTING_DIRECTIONS <- c(
-)
-
-# Choose assay types from:
-#   - light/dark preference
-#   - light/dark transition
-#   - microtracker
-#   - mirror biting
-#   - social preference
-#   - startle response/pre-pulse inhibition
-#   - total distance
-#   - y-maze 15
-#   - y-maze 4
-#
-# Each row corresponds to a data file
+# assay_names:
+# - type:
+#   - vector of strings
+# - choices:
+#   1. light/dark preference
+#   2. light/dark transition
+#   3. microtracker
+#   4. mirror biting
+#   5. social preference
+#   6. startle response/pre-pulse inhibition
+#   7. total distance
+#   8. y-maze 15
+#   9. y-maze 4
 ASSAY_NAMES <- c(
 )
 
-# Input the fish used paths
+# genotyping_file_prefix:
+# - type:
+#   - string
+# - choices:
+#   1. ""
+#   2. "relative/path"
+GENOTYPING_FILE_PREFIX <- ""
+# genotyping_files:
+# - type:
+#   - vector of strings
+# - one choice:
+#   1. at least one "relative/path" separated by commas
+#   - should contain a "Well" and "Cluster" column
+GENOTYPING_FILES <- c(
+)
+# counting_directions:
+# - type:
+#   - vector of strings
+# - choices:
+#   1. "down"
+#     - the numbering of fish in my data file is like counting down, then right
+#       on the genotyping plate
+#     - usually used for zantiks plates
+#   2. "across"
+#     - the numbering of fish in my data file is like counting right, then down
+#       on the genotyping plate
+#     - usually only used for microtracker plates
+COUNTING_DIRECTIONS <- c(
+)
+
+
+# fish_used_prefix:
+# - type:
+#   - string
+# - choices:
+#   1. ""
+#   2. "relative/path"
 FISH_USED_PREFIX <- ""
+# fish_used:
+# - type:
+#   - vector of strings
+# - one choice:
+#   1. at least one "relative/path" separated by commas
 FISH_USED <- c(
 )
 
-# Where should the output to be saved to?
-# Name should end with .csv
-# Leave empty for default of "output.csv"
+# output_file:
+# - type:
+#   - string
+# - choices:
+#   1. ""
+#     - the output will be saved to "output.csv"
+#   2. "relative/path"
+#     - the output will be saved to this file
 OUTPUT_FILE <- ""
 
 
