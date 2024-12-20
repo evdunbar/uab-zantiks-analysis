@@ -28,7 +28,7 @@
 #   2. "relative/path/to/file.toml"
 #     - use the configuration options contained in the file located at this path
 #     - all other configuration options will be ignored
-CONFIG_FILE <- "configs/jip3_test/ymaze_15.toml"
+CONFIG_FILE <- "configs/test/mt_zantiks.toml"
 
 # data_file_prefix:
 # - type:
@@ -48,7 +48,6 @@ DATA_FILE_PREFIX <- ""
 # - one choice:
 #   1. a
 DATA_FILES <- c(
-  "2024/11/26/mt.csv"
 )
 
 # Input the genotyping file paths
@@ -56,11 +55,9 @@ DATA_FILES <- c(
 # GENOTYPING_FILE_PREFIX will be prepended to every string in GENOTYPING_FILES
 GENOTYPING_FILE_PREFIX <- ""
 GENOTYPING_FILES <- c(
-  "2024/11/01/genotypes.csv"
 )
 # COUNTING_DIRECTIONS can be either across or down
 COUNTING_DIRECTIONS <- c(
-  "across"
 )
 
 # Choose assay types from:
@@ -70,18 +67,17 @@ COUNTING_DIRECTIONS <- c(
 #   - mirror biting
 #   - social preference
 #   - startle response/pre-pulse inhibition
+#   - total distance
 #   - y-maze 15
 #   - y-maze 4
 #
 # Each row corresponds to a data file
 ASSAY_NAMES <- c(
-  "microtracker"
 )
 
 # Input the fish used paths
 FISH_USED_PREFIX <- ""
 FISH_USED <- c(
-  "2024/12/09/zantiks_a/fish_used.txt"
 )
 
 # Where should the output to be saved to?
@@ -152,6 +148,7 @@ validate_inputs <- function() {
                          "mirror biting",
                          "social preference",
                          "startle response/pre-pulse inhibition",
+                         "total distance",
                          "y-maze 15",
                          "y-maze 4")
   if (!all(ASSAY_NAMES %in% valid_assay_names)) {
@@ -233,15 +230,15 @@ light_dark_preference_analysis <- function(data_file, genotypes) {
     mutate(ZONE = case_when(ARENA %in% c(5, 6, 7, 8) & ZONE == 2 ~ 1, .default = ZONE)) %>% # now 1 is always dark
     mutate(ZONE = case_when(ARENA %in% c(5, 6, 7, 8) & ZONE == 3 ~ 2, .default = ZONE)) %>% # and 2 is always light
     group_by(ARENA) %>%
-    summarize(`light time` = sum(VALUE[ENDPOINT == "TIME_SPENT_IN_ZONE" & ZONE == 2]),
-              `light distance percent` = sum(VALUE[ENDPOINT == "DISTANCE_IN_ZONE" & ZONE == 2]) /
+    summarize(`l/d preference: total light time` = sum(VALUE[ENDPOINT == "TIME_SPENT_IN_ZONE" & ZONE == 2]),
+              `l/d preference: percent distance light` = sum(VALUE[ENDPOINT == "DISTANCE_IN_ZONE" & ZONE == 2]) /
                 sum(VALUE[ENDPOINT == "DISTANCE_IN_ZONE"]))
 
   finished_data <- processed_data %>%
     left_join(genotypes, by = join_by(ARENA == row_id)) %>%
     relocate(genotype) %>%
     arrange(genotype) %>%
-    select(genotype, `light time`, `light distance percent`)
+    select(genotype, `l/d preference: total light time`, `l/d preference: percent distance light`)
 
   return(finished_data)
 }
@@ -260,14 +257,15 @@ light_dark_transition_analysis <- function(data_file, genotypes) {
     relocate(ARENA, ZONE) %>%
     arrange(ARENA, ZONE) %>%
     group_by(ARENA) %>%
-    summarize(`light/dark ratio` = sum(DISTANCE[CONDITION == "BRIGHT"]) / sum(DISTANCE[CONDITION == "DARK"]),
-              thigmotaxis = sum(DISTANCE[ZONE == 1]) / sum(DISTANCE))
+    summarize(`l/d transition: light/dark ratio` = sum(DISTANCE[CONDITION == "BRIGHT"]) /
+                sum(DISTANCE[CONDITION == "DARK"]),
+              `l/d transition: thigmotaxis` = sum(DISTANCE[ZONE == 1]) / sum(DISTANCE))
 
   finished_data <- processed_data %>%
     left_join(genotypes, by = join_by(ARENA == row_id)) %>%
     relocate(genotype) %>%
     arrange(genotype) %>%
-    select(genotype, `light/dark ratio`, thigmotaxis)
+    select(genotype, `l/d transition: light/dark ratio`, `l/d transition: thigmotaxis`)
 
   return(finished_data)
 }
@@ -283,7 +281,7 @@ microtracker_analysis <- function(data_file, genotypes) {
 
   data <- data %>%
     select(Well, `30`, `60`, `90`, `120`) %>%
-    mutate(`Average Locomotor Activity` = rowMeans(across(c(`30`, `60`, `90`, `120`)))) %>%
+    mutate(`microtracker: average locomotor activity` = rowMeans(across(c(`30`, `60`, `90`, `120`)))) %>%
     mutate(row = str_extract(Well, "[A-H]"), col = as.integer(str_extract(Well, "[0-9]+"))) %>%
     arrange(row, col) %>%
     mutate(row_id = row_number())
@@ -291,7 +289,7 @@ microtracker_analysis <- function(data_file, genotypes) {
   finished_data <- data %>%
     full_join(genotypes, by = join_by(row_id)) %>%
     relocate(genotype) %>%
-    select(genotype, `Average Locomotor Activity`) %>%
+    select(genotype, `microtracker: average locomotor activity`) %>%
     arrange(genotype)
 
   return(finished_data)
@@ -308,13 +306,45 @@ startle_response_analysis <- function(data_file, genotypes) {
     relocate(ARENA) %>%
     arrange(ARENA) %>%
     group_by(ARENA) %>%
-    summarize(`pre-pulse` = sum(DISTANCE[PHASE == "PREPULSE"]), `startle alone` = sum(DISTANCE[PHASE == "STARTLE"]))
+    summarize(`startle response: pre-pulse` = sum(DISTANCE[PHASE == "PREPULSE"]), `startle response: startle alone` = sum(DISTANCE[PHASE == "STARTLE"]))
 
   finished_data <- processed_data %>%
     left_join(genotypes, by = join_by(ARENA == row_id)) %>%
     relocate(genotype) %>%
     arrange(genotype) %>%
-    select(genotype, `pre-pulse`, `startle alone`)
+    select(genotype, `startle response: pre-pulse`, `startle response: startle alone`)
+
+  return(finished_data)
+}
+
+total_distance_analysis <- function(data_file, genotypes) {
+  lines <- readLines(data_file)
+  csv_text <- lines[4:(length(lines) - 1)]
+  data <- read_csv(I(csv_text), col_types = "ddicdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd")
+
+  processed_data <- data %>%
+    pivot_longer(cols = A1_Z1:A48_Z2,
+                 names_to = c("ARENA", "ZONE"),
+                 names_pattern = "A([0-9]+)_Z([1,2])",
+                 values_to = "DISTANCE") %>%
+    mutate(ARENA = as.integer(ARENA), ZONE = as.integer(ZONE)) %>%
+    relocate(ARENA, ZONE) %>%
+    arrange(ARENA, ZONE) %>%
+    group_by(ARENA) %>%
+    summarize(`total distance: zone 1 distance` = sum(DISTANCE[ZONE == 1]),
+              `total distance: zone 2 distance` = sum(DISTANCE[ZONE == 2]),
+              `total distance: cumulative distance` = sum(DISTANCE),
+              `total distance: average velocity` = sum(DISTANCE) / 3600)
+
+  finished_data <- processed_data %>%
+    left_join(genotypes, by = join_by(ARENA == row_id)) %>%
+    relocate(genotype) %>%
+    arrange(genotype) %>%
+    select(genotype,
+           `total distance: zone 1 distance`,
+           `total distance: zone 2 distance`,
+           `total distance: cumulative distance`,
+           `total distance: average velocity`)
 
   return(finished_data)
 }
@@ -363,9 +393,9 @@ y_maze_analysis <- function(data_file, genotypes) {
     count(tetragram, name = "count") %>%
     mutate(percentage = count / sum(count) * 100) %>%
     summarize(
-      alternations = sum(count[tetragram %in% c("LRLR", "RLRL")]) / sum(count),
-      repetitions = sum(count[tetragram %in% c("LLLL", "RRRR")]) / sum(count),
-      turns = sum(count)
+      `y-maze: alternations` = sum(count[tetragram %in% c("LRLR", "RLRL")]) / sum(count),
+      `y-maze: repetitions` = sum(count[tetragram %in% c("LLLL", "RRRR")]) / sum(count),
+      `y-maze: turns` = sum(count)
     )
 
   # add genotyping
@@ -373,7 +403,7 @@ y_maze_analysis <- function(data_file, genotypes) {
     left_join(genotypes, by = join_by(ARENA == row_id)) %>%
     relocate(genotype) %>%
     arrange(genotype) %>%
-    select(genotype, alternations, repetitions, turns)
+    select(genotype, `y-maze: alternations`, `y-maze: repetitions`, `y-maze: turns`)
 
   return(processed_data)
 }
@@ -408,6 +438,8 @@ for (idx in seq_along(DATA_FILES)) {
     data <- microtracker_analysis(data_file, genotypes)
   } else if (assay_name == "startle response/pre-pulse inhibition") {
     data <- startle_response_analysis(data_file, genotypes)
+  } else if (assay_name == "total distance") {
+    data <- total_distance_analysis(data_file, genotypes)
   } else if (assay_name == "y-maze 15") {
     data <- y_maze_analysis(data_file, genotypes)
   }

@@ -1,0 +1,13 @@
+[data]
+files_prefix = "2024/11/26/"
+files = ["mt.csv", "zana.csv", "zanb.csv"]
+assay_names = ["microtracker", "total distance", "total distance"]
+
+[genotypes]
+files_prefix = "2024/11/26/genotypes.csv"
+files = ["", "", ""]
+counting_directions = ["across", "down", "down"]
+
+[fish_used]
+files_prefix = "2024/11/26/fu_"
+files = ["mt.txt", "a.txt", "b.txt"]

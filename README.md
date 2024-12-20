@@ -51,10 +51,10 @@
 
 ### Fish Used Files
 
-- These files denote both which fish were used in a specific assay and what fish got genotyped within a 96-well plate
+- These files denote both which fish were used in a specific assay
 - An example to start from is located at [templates/fish_used.txt](templates/fish_used.txt)
     - This example is a genotyping plate that is entirely empty
-- "O" (capital letter o) represents that this well *shouldn't* be included and "X" or "x" represents that this well *should* be included
+- "O" (capital letter o) represents that this well did not have a fish in it and "X" or "x" represents that it did
 - For example, a full 96-well plate for a MicroTracker Run would look like this:
 ```
 x x x x x x x x x x x x
