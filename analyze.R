@@ -15,6 +15,7 @@
 # - If you need more info, check the README.md file
 # - All relative paths are relative to the working directory
 
+
 ##############
 # PARAMETERS #
 ##############
@@ -28,7 +29,7 @@
 #   2. "relative/path/to/file.toml"
 #     - use the configuration options contained in the file located at this path
 #     - all other configuration options will be ignored
-CONFIG_FILE <- "configs/test/mt_zantiks.toml"
+CONFIG_FILE <- "configs/jip3_test/light_dark_preference.toml"
 
 # data_file_prefix:
 # - type:
@@ -184,12 +185,11 @@ process_genotypes <- function(genotyping_file, fish_used_file, counting_directio
   # get which wells were used
   wells_used <- label_matrix[fish_used_data == "x" | fish_used_data == "X"]
 
-  # read in data that matches valid genotypes
+  # read in data
   genotype_data <- read_csv(genotyping_file) %>%
     select(genotyping_well = Well, genotype = Cluster) %>%
     mutate(row = str_extract(genotyping_well, "[A-H]"), column = as.integer(str_extract(genotyping_well, "[0-9]+"))) %>%
     mutate(genotyping_well = paste0(row, sprintf("%02d", column))) %>%
-    filter(genotype %in% c("HET", "HOM", "WT")) %>% # do i want this?
     filter(genotyping_well %in% wells_used)
 
   # sort by row or column
@@ -451,7 +451,9 @@ for (idx in seq_along(DATA_FILES)) {
   }
 }
 
-all_data <- all_data %>% arrange(genotype)
+all_data <- all_data %>%
+  arrange(genotype) %>%
+  filter(genotype %in% c("HET", "HOM", "WT"))
 if (OUTPUT_FILE == "") {
   write_csv(all_data, "output.csv")
 } else {
