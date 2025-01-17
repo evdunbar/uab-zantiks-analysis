@@ -1,0 +1,28 @@
+[data]
+files_prefix = "2024/12/"
+files = [
+    "06/social_preference/a/social_preference-20241206T141909.csv",
+    "06/social_preference/b/social_preference-20241206T150553.csv",
+    "18/social_preference/ab/social_preference-20241218T142322.csv",
+    "18/social_preference/cd/social_preference-20241218T114133.csv"
+]
+assay_names = [
+    "social preference",
+    "social preference",
+    "social preference",
+    "social preference"
+]
+
+[genotypes]
+files_prefix = "2024/12/"
+files = ["06/genotypes.csv", "06/genotypes.csv", "18/genotypes.csv", "18/genotypes.csv"]
+counting_directions = ["across", "across", "across", "across"]
+
+[fish_used]
+files_prefix = ""
+files = [
+    "2024/12/06/social_preference/a/fish_used.txt",
+    "2024/12/06/social_preference/b/fish_used.txt",
+    "templates/fish_used/eight_1.txt",
+    "templates/fish_used/eight_2.txt"
+]

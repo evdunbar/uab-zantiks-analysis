@@ -1,0 +1,28 @@
+[data]
+files_prefix = "2024/12/"
+files = [
+    "06/mirror_biting/a/mirror_biting-20241206T110125.csv",
+    "06/mirror_biting/b/mirror_biting-20241206T121849.csv",
+    "18/mirror_biting/ab/mirror_biting-20241218T122632.csv",
+    "18/mirror_biting/cd/mirror_biting-20241218T093359.csv",
+]
+assay_names = [
+    "mirror biting",
+    "mirror biting",
+    "mirror biting",
+    "mirror biting"
+]
+
+[genotypes]
+files_prefix = "2024/12/"
+files = ["06/genotypes.csv", "06/genotypes.csv", "18/genotypes.csv", "18/genotypes.csv"]
+counting_directions = ["across", "across", "across", "across"]
+
+[fish_used]
+files_prefix = ""
+files = [
+    "2024/12/06/mirror_biting/a/fish_used.txt",
+    "2024/12/06/mirror_biting/b/fish_used.txt",
+    "templates/fish_used/eight_1.txt",
+    "templates/fish_used/eight_2.txt"
+]

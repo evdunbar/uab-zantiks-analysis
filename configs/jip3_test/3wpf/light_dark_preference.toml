@@ -1,0 +1,25 @@
+[data]
+files_prefix = "2024/12/"
+files = [
+    "06/light_dark_preference/light_dark_preference-20241206T133512.csv",
+    "18/light_dark_preference/ab/light_dark_preference-20241218T134048.csv",
+    "18/light_dark_preference/cd/light_dark_preference-20241218T105417.csv",
+]
+assay_names = [
+    "light/dark preference",
+    "light/dark preference",
+    "light/dark preference"
+]
+
+[genotypes]
+files_prefix = "2024/12/"
+files = ["06/genotypes.csv", "18/genotypes.csv", "18/genotypes.csv"]
+counting_directions = ["across", "across", "across"]
+
+[fish_used]
+files_prefix = "2024/12/"
+files = [
+    "06/light_dark_preference/fish_used.txt",
+    "18/light_dark_preference/ab/fish_used.txt",
+    "18/light_dark_preference/cd/fish_used.txt"
+]

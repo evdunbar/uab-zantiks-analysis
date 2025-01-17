@@ -1,0 +1,48 @@
+[data]
+files_prefix = "2024/12/"
+files = [
+    "06/ymaze_4/a/ymaze_4-20241206T105906.csv",
+    "06/ymaze_4/b/ymaze_4-20241206T121834.csv",
+    "18/ymaze_4/a/ymaze_4-20241218T093343.csv",
+    "18/ymaze_4/b/ymaze_4-20241218T105433.csv",
+    "18/ymaze_4/c/ymaze_4-20241218T122606.csv",
+    "18/ymaze_4/d/ymaze_4-20241218T134518.csv"
+]
+assay_names = [
+    "y-maze 4",
+    "y-maze 4",
+    "y-maze 4",
+    "y-maze 4",
+    "y-maze 4",
+    "y-maze 4"
+]
+
+[genotypes]
+files_prefix = "2024/12/"
+files = [
+    "06/genotypes.csv",
+    "06/genotypes.csv",
+    "18/genotypes.csv",
+    "18/genotypes.csv",
+    "18/genotypes.csv",
+    "18/genotypes.csv"
+]
+counting_directions = [
+    "across",
+    "across",
+    "across",
+    "across",
+    "across",
+    "across",
+]
+
+[fish_used]
+files_prefix = ""
+files = [
+    "2024/12/06/ymaze_4/a/fish_used.txt",
+    "2024/12/06/ymaze_4/b/fish_used.txt",
+    "templates/fish_used/four_1.txt",
+    "templates/fish_used/four_2.txt",
+    "templates/fish_used/four_3.txt",
+    "templates/fish_used/four_4.txt"
+]
