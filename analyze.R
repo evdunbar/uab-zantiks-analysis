@@ -29,7 +29,7 @@
 #   2. "relative/path/to/file.toml"
 #     - use the configuration options contained in the file located at this path
 #     - all other configuration options will be ignored
-CONFIG_FILE <- "configs/jip3_test/light_dark_preference.toml"
+CONFIG_FILE <- "configs/jip3_test/3wpf/social_preference.toml"
 
 # data_file_prefix:
 # - type:
@@ -333,6 +333,65 @@ microtracker_analysis <- function(data_file, genotypes) {
   return(finished_data)
 }
 
+mirror_biting_analysis <- function(data_file, genotypes) {
+  lines <- readLines(data_file)
+  csv_text <- lines[4:(length(lines) - 1)]
+  data <- read_csv(I(csv_text), col_types = "diddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiidddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd")
+
+  processed_data <- data %>%
+    pivot_longer(cols = D.A1.Z1:T.A20.Z3,
+                 names_to = c("CATEGORY", "ARENA", "ZONE"),
+                 names_pattern = "([D,C,T])\\.A([0-9]+)\\.Z([1-3])",
+                 values_to = "VALUE") %>%
+    mutate(ARENA = as.integer(ARENA), ZONE = as.integer(ZONE)) %>%
+    relocate(ARENA, ZONE) %>%
+    arrange(ARENA, ZONE) %>%
+    group_by(ARENA) %>%
+    summarize(
+      `mirror biting: percent mirror time` = sum(VALUE[CATEGORY == "T" & ZONE == 1]) / sum(VALUE[CATEGORY == "T"])
+    )
+
+  finished_data <- processed_data %>%
+    left_join(genotypes, by = join_by(ARENA == row_id)) %>%
+    relocate(genotype) %>%
+    arrange(genotype) %>%
+    select(genotype,
+           `mirror biting: percent mirror time`)
+
+  return(finished_data)
+}
+
+social_preference_analysis <- function(data_file, genotypes) {
+  lines <- readLines(data_file)
+  csv_text <- lines[4:(length(lines) - 1)]
+  data <- read_csv(I(csv_text), col_types = "didddddddddddddddddddddddddddddddddddddddddddddddddd")
+
+  processed_data <- data %>%
+    pivot_longer(cols = T.A1.Z1:T.A10.Z5,
+                 names_to = c("ARENA", "ZONE"),
+                 names_pattern = "T.A([0-9]+).Z([1-5])",
+                 values_to = "SECONDS") %>%
+    mutate(ARENA = as.integer(ARENA), ZONE = as.integer(ZONE)) %>%
+    relocate(ARENA, ZONE) %>%
+    arrange(ARENA, ZONE) %>%
+    group_by(ARENA) %>%
+    summarize(
+      `social preference: social preference index` = (sum(SECONDS[ZONE == 4]) +
+                                                        0.5 * sum(SECONDS[ZONE == 3]) -
+                                                        0.5 * sum(SECONDS[ZONE == 2]) -
+                                                        sum(SECONDS[ZONE == 1])) / sum(SECONDS)
+    )
+
+  finished_data <- processed_data %>%
+    left_join(genotypes, by = join_by(ARENA == row_id)) %>%
+    relocate(genotype) %>%
+    arrange(genotype) %>%
+    select(genotype,
+           `social preference: social preference index`)
+
+  return(finished_data)
+}
+
 startle_response_analysis <- function(data_file, genotypes) {
   lines <- readLines(data_file)
   csv_text <- lines[4:(length(lines) - 1)]
@@ -474,11 +533,15 @@ for (idx in seq_along(DATA_FILES)) {
     data <- light_dark_transition_analysis(data_file, genotypes)
   } else if (assay_name == "microtracker") {
     data <- microtracker_analysis(data_file, genotypes)
+  } else if (assay_name == "mirror biting") {
+    data <- mirror_biting_analysis(data_file, genotypes)
+  } else if (assay_name == "social preference") {
+    data <- social_preference_analysis(data_file, genotypes)
   } else if (assay_name == "startle response/pre-pulse inhibition") {
     data <- startle_response_analysis(data_file, genotypes)
   } else if (assay_name == "total distance") {
     data <- total_distance_analysis(data_file, genotypes)
-  } else if (assay_name == "y-maze 15") {
+  } else if (assay_name == "y-maze 15" || assay_name == "y-maze 4") {
     data <- y_maze_analysis(data_file, genotypes)
   }
 
