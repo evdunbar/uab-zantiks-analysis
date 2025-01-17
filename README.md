@@ -51,10 +51,12 @@
 
 ### Fish Used Files
 
-- These files denote both which fish were used in a specific assay
+- These files tell us which genotyping wells are usually used for this assay
+    - If a fish is known to be "bad" or missing in a specific run, it should still be included
+        - This example should be excluded by removing the genotyping entry for that fish instead
 - Common examples to start from are located in the [templates/fish_used/](templates/fish_used/)
 - "O" (capital letter o) represents that this well did not have a fish in it and "X" or "x" represents that it did
-- For example, a full 96-well plate for a MicroTracker Run would look like this:
+- For example, a MicroTracker Run would look like this:
 ```
 x x x x x x x x x x x x
 x x x x x x x x x x x x
