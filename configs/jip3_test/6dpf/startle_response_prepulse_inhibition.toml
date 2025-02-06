@@ -1,13 +1,17 @@
 [data]
-files_prefix = "2024/12/09/zantiks_"
-files = ["a/startle_response-20241209T105820.csv", "b/startle_response-20241209T105839.csv"]
-assay_names = ["startle response/pre-pulse inhibition", "startle response/pre-pulse inhibition"]
+files_prefix = ""
+files = [
+    "2024/12/09/zantiks_a/startle_response-20241209T105820.csv",
+    "2024/12/09/zantiks_b/startle_response-20241209T105839.csv",
+    "2025/01/13/zantiks_a/startle_response-20250113T105922.csv"
+]
+assay_names = ["startle response/pre-pulse inhibition", "startle response/pre-pulse inhibition", "startle response/pre-pulse inhibition"]
 
 [genotypes]
-files_prefix = "2024/12/09/genotypes.csv"
-files = ["", ""]
-counting_directions = ["down", "down"]
+files_prefix = ""
+files = ["2024/12/09/genotypes.csv", "2024/12/09/genotypes.csv", "2025/01/13/genotypes.csv"]
+counting_directions = ["down", "down", "down"]
 
 [fish_used]
-files_prefix = "2024/12/09/zantiks_"
-files = ["a/fish_used.txt", "b/fish_used.txt"]
+files_prefix = "templates/fish_used/zantiks_"
+files = ["left.txt", "right.txt", "left.txt"]
