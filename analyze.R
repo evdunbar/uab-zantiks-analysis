@@ -29,7 +29,7 @@
 #   2. "relative/path/to/file.toml"
 #     - use the configuration options contained in the file located at this path
 #     - all other configuration options will be ignored
-CONFIG_FILE <- "configs/jip3_test/6dpf/startle_response_prepulse_inhibition.toml"
+CONFIG_FILE <- "configs/jip3_test/3wpf/mirror_biting.toml"
 
 # data_file_prefix:
 # - type:

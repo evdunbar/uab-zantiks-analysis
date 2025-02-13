@@ -1,25 +1,37 @@
 [data]
-files_prefix = "2024/12/"
+files_prefix = ""
 files = [
-    "06/light_dark_preference/light_dark_preference-20241206T133512.csv",
-    "18/light_dark_preference/ab/light_dark_preference-20241218T134048.csv",
-    "18/light_dark_preference/cd/light_dark_preference-20241218T105417.csv",
+    "2024/12/06/light_dark_preference/light_dark_preference-20241206T133512.csv",
+    "2024/12/18/light_dark_preference/ab/light_dark_preference-20241218T134048.csv",
+    "2024/12/18/light_dark_preference/cd/light_dark_preference-20241218T105417.csv",
+    "2025/02/04/light_dark_preference/ab/light_dark_preference-20250204T134938.csv",
+    "2025/02/04/light_dark_preference/cd/light_dark_preference-20250204T110814.csv",
+    "2025/02/06/light_dark_preference/ab/light_dark_preference-20250206T134253.csv",
+    "2025/02/06/light_dark_preference/cd/light_dark_preference-20250206T110720.csv",
 ]
 assay_names = [
+    "light/dark preference",
+    "light/dark preference",
+    "light/dark preference",
+    "light/dark preference",
     "light/dark preference",
     "light/dark preference",
     "light/dark preference"
 ]
 
 [genotypes]
-files_prefix = "2024/12/"
-files = ["06/genotypes.csv", "18/genotypes.csv", "18/genotypes.csv"]
-counting_directions = ["across", "across", "across"]
+files_prefix = ""
+files = ["2024/12/06/genotypes.csv", "2024/12/18/genotypes.csv", "2024/12/18/genotypes.csv", "2025/02/04/genotypes.csv", "2025/02/04/genotypes.csv", "2025/02/06/genotypes.csv", "2025/02/06/genotypes.csv"]
+counting_directions = ["across", "across", "across", "across", "across", "across", "across"]
 
 [fish_used]
-files_prefix = "2024/12/"
+files_prefix = ""
 files = [
-    "06/light_dark_preference/fish_used.txt",
-    "18/light_dark_preference/ab/fish_used.txt",
-    "18/light_dark_preference/cd/fish_used.txt"
+    "2024/12/06/light_dark_preference/fish_used.txt",
+    "2024/12/18/light_dark_preference/ab/fish_used.txt",
+    "2024/12/18/light_dark_preference/cd/fish_used.txt",
+    "2025/02/04/eight_1.txt",
+    "2025/02/04/eight_2.txt",
+    "templates/fish_used/eight_1.txt",
+    "templates/fish_used/eight_2.txt"
 ]
