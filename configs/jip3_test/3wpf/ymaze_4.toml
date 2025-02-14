@@ -1,14 +1,30 @@
 [data]
-files_prefix = "2024/12/"
+files_prefix = ""
 files = [
-    "06/ymaze_4/a/ymaze_4-20241206T105906.csv",
-    "06/ymaze_4/b/ymaze_4-20241206T121834.csv",
-    "18/ymaze_4/a/ymaze_4-20241218T093343.csv",
-    "18/ymaze_4/b/ymaze_4-20241218T105433.csv",
-    "18/ymaze_4/c/ymaze_4-20241218T122606.csv",
-    "18/ymaze_4/d/ymaze_4-20241218T134518.csv"
+    "2024/12/06/ymaze_4/a/ymaze_4-20241206T105906.csv",
+    "2024/12/06/ymaze_4/b/ymaze_4-20241206T121834.csv",
+    "2024/12/18/ymaze_4/a/ymaze_4-20241218T093343.csv",
+    "2024/12/18/ymaze_4/b/ymaze_4-20241218T105433.csv",
+    "2024/12/18/ymaze_4/c/ymaze_4-20241218T122606.csv",
+    "2024/12/18/ymaze_4/d/ymaze_4-20241218T134518.csv",
+    "2025/02/04/ymaze_4/a/ymaze_4-20250204T095050.csv",
+    "2025/02/04/ymaze_4/b/ymaze_4-20250204T110344.csv",
+    "2025/02/04/ymaze_4/c/ymaze_4-20250204T123733.csv",
+    "2025/02/04/ymaze_4/d/ymaze_4-20250204T135210.csv",
+    "2025/02/06/ymaze_4/a/ymaze_4-20250206T095437.csv",
+    "2025/02/06/ymaze_4/b/ymaze_4-20250206T111039.csv",
+    "2025/02/06/ymaze_4/c/ymaze_4-20250206T123431.csv",
+    "2025/02/06/ymaze_4/d/ymaze_4-20250206T134717.csv"
 ]
 assay_names = [
+    "y-maze 4",
+    "y-maze 4",
+    "y-maze 4",
+    "y-maze 4",
+    "y-maze 4",
+    "y-maze 4",
+    "y-maze 4",
+    "y-maze 4",
     "y-maze 4",
     "y-maze 4",
     "y-maze 4",
@@ -18,14 +34,22 @@ assay_names = [
 ]
 
 [genotypes]
-files_prefix = "2024/12/"
+files_prefix = ""
 files = [
-    "06/genotypes.csv",
-    "06/genotypes.csv",
-    "18/genotypes.csv",
-    "18/genotypes.csv",
-    "18/genotypes.csv",
-    "18/genotypes.csv"
+    "2024/12/06/genotypes.csv",
+    "2024/12/06/genotypes.csv",
+    "2024/12/18/genotypes.csv",
+    "2024/12/18/genotypes.csv",
+    "2024/12/18/genotypes.csv",
+    "2024/12/18/genotypes.csv",
+    "2025/02/04/genotypes.csv",
+    "2025/02/04/genotypes.csv",
+    "2025/02/04/genotypes.csv",
+    "2025/02/04/genotypes.csv",
+    "2025/02/06/genotypes.csv",
+    "2025/02/06/genotypes.csv",
+    "2025/02/06/genotypes.csv",
+    "2025/02/06/genotypes.csv"
 ]
 counting_directions = [
     "across",
@@ -34,6 +58,14 @@ counting_directions = [
     "across",
     "across",
     "across",
+    "across",
+    "across",
+    "across",
+    "across",
+    "across",
+    "across",
+    "across",
+    "across"
 ]
 
 [fish_used]
@@ -41,6 +73,14 @@ files_prefix = ""
 files = [
     "2024/12/06/ymaze_4/a/fish_used.txt",
     "2024/12/06/ymaze_4/b/fish_used.txt",
+    "templates/fish_used/four_1.txt",
+    "templates/fish_used/four_2.txt",
+    "templates/fish_used/four_3.txt",
+    "templates/fish_used/four_4.txt",
+    "2025/02/04/four_1.txt",
+    "2025/02/04/four_2.txt",
+    "2025/02/04/four_3.txt",
+    "2025/02/04/four_4.txt",
     "templates/fish_used/four_1.txt",
     "templates/fish_used/four_2.txt",
     "templates/fish_used/four_3.txt",
