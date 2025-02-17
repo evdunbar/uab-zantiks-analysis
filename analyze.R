@@ -29,7 +29,7 @@
 #   2. "relative/path/to/file.toml"
 #     - use the configuration options contained in the file located at this path
 #     - all other configuration options will be ignored
-CONFIG_FILE <- "configs/jip3_test/3wpf/ymaze_4.toml"
+CONFIG_FILE <- ""
 
 # data_file_prefix:
 # - type:
@@ -225,7 +225,7 @@ process_genotypes <- function(genotyping_file, fish_used_file, counting_directio
 
   # read in data
   genotype_data <- read_csv(genotyping_file) %>%
-    select(genotyping_well = Well, genotype = Cluster) %>%
+    select(genotyping_well = Well, genotype = Cluster, clutch = Clutch) %>%
     mutate(row = str_extract(genotyping_well, "[A-H]"), column = as.integer(str_extract(genotyping_well, "[0-9]+"))) %>%
     mutate(genotyping_well = paste0(row, sprintf("%02d", column))) %>%
     filter(genotyping_well %in% wells_used)
@@ -274,9 +274,8 @@ light_dark_preference_analysis <- function(data_file, genotypes) {
 
   finished_data <- processed_data %>%
     left_join(genotypes, by = join_by(ARENA == row_id)) %>%
-    relocate(genotype) %>%
-    arrange(genotype) %>%
-    select(genotype, `l/d preference: total light time`, `l/d preference: percent distance light`)
+    arrange(clutch, genotype) %>%
+    select(clutch, genotype, `l/d preference: total light time`, `l/d preference: percent distance light`)
 
   return(finished_data)
 }
@@ -301,9 +300,8 @@ light_dark_transition_analysis <- function(data_file, genotypes) {
 
   finished_data <- processed_data %>%
     left_join(genotypes, by = join_by(ARENA == row_id)) %>%
-    relocate(genotype) %>%
-    arrange(genotype) %>%
-    select(genotype, `l/d transition: light/dark ratio`, `l/d transition: thigmotaxis`)
+    arrange(clutch, genotype) %>%
+    select(clutch, genotype, `l/d transition: light/dark ratio`, `l/d transition: thigmotaxis`)
 
   return(finished_data)
 }
@@ -326,9 +324,8 @@ microtracker_analysis <- function(data_file, genotypes) {
 
   finished_data <- data %>%
     full_join(genotypes, by = join_by(row_id)) %>%
-    relocate(genotype) %>%
-    select(genotype, `microtracker: average locomotor activity`) %>%
-    arrange(genotype)
+    arrange(clutch, genotype) %>%
+    select(clutch, genotype, `microtracker: average locomotor activity`)
 
   return(finished_data)
 }
@@ -353,9 +350,8 @@ mirror_biting_analysis <- function(data_file, genotypes) {
 
   finished_data <- processed_data %>%
     left_join(genotypes, by = join_by(ARENA == row_id)) %>%
-    relocate(genotype) %>%
-    arrange(genotype) %>%
-    select(genotype,
+    arrange(clutch, genotype) %>%
+    select(clutch, genotype,
            `mirror biting: percent mirror time`)
 
   return(finished_data)
@@ -384,9 +380,8 @@ social_preference_analysis <- function(data_file, genotypes) {
 
   finished_data <- processed_data %>%
     left_join(genotypes, by = join_by(ARENA == row_id)) %>%
-    relocate(genotype) %>%
-    arrange(genotype) %>%
-    select(genotype,
+    arrange(clutch, genotype) %>%
+    select(clutch, genotype,
            `social preference: social preference index`)
 
   return(finished_data)
@@ -407,9 +402,8 @@ startle_response_analysis <- function(data_file, genotypes) {
 
   finished_data <- processed_data %>%
     left_join(genotypes, by = join_by(ARENA == row_id)) %>%
-    relocate(genotype) %>%
-    arrange(genotype) %>%
-    select(genotype, `startle response: pre-pulse`, `startle response: startle alone`)
+    arrange(clutch, genotype) %>%
+    select(clutch, genotype, `startle response: pre-pulse`, `startle response: startle alone`)
 
   return(finished_data)
 }
@@ -435,9 +429,8 @@ total_distance_analysis <- function(data_file, genotypes) {
 
   finished_data <- processed_data %>%
     left_join(genotypes, by = join_by(ARENA == row_id)) %>%
-    relocate(genotype) %>%
-    arrange(genotype) %>%
-    select(genotype,
+    arrange(clutch, genotype) %>%
+    select(clutch, genotype,
            `total distance: zone 1 distance`,
            `total distance: zone 2 distance`,
            `total distance: cumulative distance`,
@@ -498,9 +491,8 @@ y_maze_analysis <- function(data_file, genotypes) {
   # add genotyping
   processed_data <- processed_data %>%
     left_join(genotypes, by = join_by(ARENA == row_id)) %>%
-    relocate(genotype) %>%
-    arrange(genotype) %>%
-    select(genotype, `y-maze: alternations`, `y-maze: repetitions`, `y-maze: turns`)
+    arrange(clutch, genotype) %>%
+    select(clutch, genotype, `y-maze: alternations`, `y-maze: repetitions`, `y-maze: turns`)
 
   return(processed_data)
 }
