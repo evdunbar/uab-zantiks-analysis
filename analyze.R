@@ -270,7 +270,7 @@ light_dark_preference_analysis <- function(data_file, genotypes) {
     group_by(ARENA) %>%
     summarize(`l/d preference: total light time` = sum(VALUE[ENDPOINT == "TIME_SPENT_IN_ZONE" & ZONE == 2]),
               `l/d preference: percent distance light` = sum(VALUE[ENDPOINT == "DISTANCE_IN_ZONE" & ZONE == 2]) /
-                sum(VALUE[ENDPOINT == "DISTANCE_IN_ZONE"]))
+                sum(VALUE[ENDPOINT == "DISTANCE_IN_ZONE"]) * 100)
 
   finished_data <- processed_data %>%
     left_join(genotypes, by = join_by(ARENA == row_id)) %>%
@@ -296,7 +296,7 @@ light_dark_transition_analysis <- function(data_file, genotypes) {
     group_by(ARENA) %>%
     summarize(`l/d transition: light/dark ratio` = sum(DISTANCE[CONDITION == "BRIGHT"]) /
                 sum(DISTANCE[CONDITION == "DARK"]),
-              `l/d transition: thigmotaxis` = sum(DISTANCE[ZONE == 1]) / sum(DISTANCE))
+              `l/d transition: thigmotaxis` = sum(DISTANCE[ZONE == 1]) / sum(DISTANCE) * 100)
 
   finished_data <- processed_data %>%
     left_join(genotypes, by = join_by(ARENA == row_id)) %>%
@@ -345,7 +345,7 @@ mirror_biting_analysis <- function(data_file, genotypes) {
     arrange(ARENA, ZONE) %>%
     group_by(ARENA) %>%
     summarize(
-      `mirror biting: percent mirror time` = sum(VALUE[CATEGORY == "T" & ZONE == 1]) / sum(VALUE[CATEGORY == "T"])
+      `mirror biting: percent mirror time` = sum(VALUE[CATEGORY == "T" & ZONE == 1]) / sum(VALUE[CATEGORY == "T"]) * 100
     )
 
   finished_data <- processed_data %>%
@@ -483,8 +483,8 @@ y_maze_analysis <- function(data_file, genotypes) {
     count(tetragram, name = "count") %>%
     mutate(percentage = count / sum(count) * 100) %>%
     summarize(
-      `y-maze: alternations` = sum(count[tetragram %in% c("LRLR", "RLRL")]) / sum(count),
-      `y-maze: repetitions` = sum(count[tetragram %in% c("LLLL", "RRRR")]) / sum(count),
+      `y-maze: alternation` = sum(count[tetragram %in% c("LRLR", "RLRL")]) / sum(count) * 100,
+      `y-maze: repetition` = sum(count[tetragram %in% c("LLLL", "RRRR")]) / sum(count) * 100,
       `y-maze: turns` = sum(count)
     )
 
@@ -492,7 +492,7 @@ y_maze_analysis <- function(data_file, genotypes) {
   processed_data <- processed_data %>%
     left_join(genotypes, by = join_by(ARENA == row_id)) %>%
     arrange(clutch, genotype) %>%
-    select(clutch, genotype, `y-maze: alternations`, `y-maze: repetitions`, `y-maze: turns`)
+    select(clutch, genotype, `y-maze: alternation`, `y-maze: repetition`, `y-maze: turns`)
 
   return(processed_data)
 }
@@ -545,7 +545,7 @@ for (idx in seq_along(DATA_FILES)) {
 }
 
 all_data <- all_data %>%
-  arrange(genotype) %>%
+  arrange(clutch, desc(genotype)) %>%
   filter(genotype %in% c("HET", "HOM", "WT"))
 if (OUTPUT_FILE == "") {
   write_csv(all_data, "output.csv")
