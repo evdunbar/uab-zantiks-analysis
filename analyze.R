@@ -98,7 +98,6 @@ GENOTYPING_FILES <- c(
 COUNTING_DIRECTIONS <- c(
 )
 
-
 # fish_used_prefix:
 # - type:
 #   - string
@@ -155,6 +154,9 @@ if (CONFIG_FILE != "") {
     FISH_USED <<- config$fish_used$files
 
     COUNTING_DIRECTIONS <<- config$genotypes$counting_directions
+
+    maybe_output_file <- config$output$file
+    if (length(maybe_output_file) != 0) OUTPUT_FILE <<- maybe_output_file else OUTPUT_FILE <<- ""
   }
 } else {
   USING_CONFIG <- FALSE

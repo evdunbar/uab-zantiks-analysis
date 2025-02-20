@@ -11,3 +11,6 @@ counting_directions = []
 [fish_used]
 files_prefix = ""
 files = []
+
+[output]
+file = ""
