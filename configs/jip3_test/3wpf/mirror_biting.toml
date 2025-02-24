@@ -8,9 +8,13 @@ files = [
     "2025/02/04/mirror_biting/abd/mirror_biting-20250204T123554.csv",
     "2025/02/04/mirror_biting/c/mirror_biting-20250204T095111.csv",
     "2025/02/06/mirror_biting/ab/mirror_biting-20250206T123258.csv",
-    "2025/02/06/mirror_biting/cd/mirror_biting-20250206T095505.csv"
+    "2025/02/06/mirror_biting/cd/mirror_biting-20250206T095505.csv",
+    "2025/02/18/mirror_biting/ab/mirror_biting-20250218T122705.csv",
+    "2025/02/18/mirror_biting/cd/mirror_biting-20250218T095615.csv"
 ]
 assay_names = [
+    "mirror biting",
+    "mirror biting",
     "mirror biting",
     "mirror biting",
     "mirror biting",
@@ -23,8 +27,8 @@ assay_names = [
 
 [genotypes]
 files_prefix = ""
-files = ["2024/12/06/genotypes.csv", "2024/12/06/genotypes.csv", "2024/12/18/genotypes.csv", "2024/12/18/genotypes.csv", "2025/02/04/genotypes.csv", "2025/02/04/genotypes.csv", "2025/02/06/genotypes.csv", "2025/02/06/genotypes.csv"]
-counting_directions = ["across", "across", "across", "across", "across", "across", "across", "across"]
+files = ["2024/12/06/genotypes.csv", "2024/12/06/genotypes.csv", "2024/12/18/genotypes.csv", "2024/12/18/genotypes.csv", "2025/02/04/genotypes.csv", "2025/02/04/genotypes.csv", "2025/02/06/genotypes.csv", "2025/02/06/genotypes.csv", "2025/02/18/genotypes.csv", "2025/02/18/genotypes.csv"]
+counting_directions = ["across", "across", "across", "across", "across", "across", "across", "across", "across", "across"]
 
 [fish_used]
 files_prefix = ""
@@ -35,6 +39,8 @@ files = [
     "templates/fish_used/eight_2.txt",
     "2025/02/04/eight_1.txt",
     "2025/02/04/eight_2.txt",
+    "templates/fish_used/eight_1.txt",
+    "templates/fish_used/eight_2.txt",
     "templates/fish_used/eight_1.txt",
     "templates/fish_used/eight_2.txt"
 ]

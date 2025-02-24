@@ -8,9 +8,13 @@ files = [
     "2025/02/04/social_preference/ab/social_preference-20250204T143507.csv",
     "2025/02/04/social_preference/cd/social_preference-20250204T115242.csv",
     "2025/02/06/social_preference/ab/social_preference-20250206T142907.csv",
-    "2025/02/06/social_preference/cd/social_preference-20250206T115440.csv"
+    "2025/02/06/social_preference/cd/social_preference-20250206T115440.csv",
+    "2025/02/18/social_preference/ab/social_preference-20250218T142028.csv",
+    "2025/02/18/social_preference/cd/social_preference-20250218T115000.csv"
 ]
 assay_names = [
+    "social preference",
+    "social preference",
     "social preference",
     "social preference",
     "social preference",
@@ -23,8 +27,8 @@ assay_names = [
 
 [genotypes]
 files_prefix = ""
-files = ["2024/12/06/genotypes.csv", "2024/12/06/genotypes.csv", "2024/12/18/genotypes.csv", "2024/12/18/genotypes.csv", "2025/02/04/genotypes.csv", "2025/02/04/genotypes.csv", "2025/02/06/genotypes.csv", "2025/02/06/genotypes.csv"]
-counting_directions = ["across", "across", "across", "across", "across", "across", "across", "across"]
+files = ["2024/12/06/genotypes.csv", "2024/12/06/genotypes.csv", "2024/12/18/genotypes.csv", "2024/12/18/genotypes.csv", "2025/02/04/genotypes.csv", "2025/02/04/genotypes.csv", "2025/02/06/genotypes.csv", "2025/02/06/genotypes.csv", "2025/02/18/genotypes.csv", "2025/02/18/genotypes.csv"]
+counting_directions = ["across", "across", "across", "across", "across", "across", "across", "across", "across", "across"]
 
 [fish_used]
 files_prefix = ""
@@ -35,6 +39,8 @@ files = [
     "templates/fish_used/eight_2.txt",
     "2025/02/04/eight_1.txt",
     "2025/02/04/eight_2.txt",
+    "templates/fish_used/eight_1.txt",
+    "templates/fish_used/eight_2.txt",
     "templates/fish_used/eight_1.txt",
     "templates/fish_used/eight_2.txt"
 ]
