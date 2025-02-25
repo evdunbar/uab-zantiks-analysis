@@ -50,8 +50,7 @@ DATA_FILE_PREFIX <- ""
 #   1. at least one "relative/path" separated by commas
 #   - should contain the raw output of a zantiks or microtracker run
 #   - pay attention to the order and use the same one for all other "vector of strings"
-DATA_FILES <- c(
-)
+DATA_FILES <- c()
 # assay_names:
 # - type:
 #   - vector of strings
@@ -65,8 +64,7 @@ DATA_FILES <- c(
 #   7. total distance
 #   8. y-maze 15
 #   9. y-maze 4
-ASSAY_NAMES <- c(
-)
+ASSAY_NAMES <- c()
 
 # genotyping_file_prefix:
 # - type:
@@ -81,8 +79,7 @@ GENOTYPING_FILE_PREFIX <- ""
 # - one choice:
 #   1. at least one "relative/path" separated by commas
 #   - should contain a "Well" and "Cluster" column
-GENOTYPING_FILES <- c(
-)
+GENOTYPING_FILES <- c()
 # counting_directions:
 # - type:
 #   - vector of strings
@@ -95,8 +92,7 @@ GENOTYPING_FILES <- c(
 #     - the numbering of fish in my data file is like counting right, then down
 #       on the genotyping plate
 #     - usually only used for microtracker plates
-COUNTING_DIRECTIONS <- c(
-)
+COUNTING_DIRECTIONS <- c()
 
 # fish_used_prefix:
 # - type:
@@ -110,8 +106,7 @@ FISH_USED_PREFIX <- ""
 #   - vector of strings
 # - one choice:
 #   1. at least one "relative/path" separated by commas
-FISH_USED <- c(
-)
+FISH_USED <- c()
 
 # output_file:
 # - type:
@@ -183,15 +178,17 @@ validate_inputs <- function() {
   }
 
   # we have to know how to analyze an assay
-  valid_assay_names <- c("light/dark preference",
-                         "light/dark transition",
-                         "microtracker",
-                         "mirror biting",
-                         "social preference",
-                         "startle response/pre-pulse inhibition",
-                         "total distance",
-                         "y-maze 15",
-                         "y-maze 4")
+  valid_assay_names <- c(
+    "light/dark preference",
+    "light/dark transition",
+    "microtracker",
+    "mirror biting",
+    "social preference",
+    "startle response/pre-pulse inhibition",
+    "total distance",
+    "y-maze 15",
+    "y-maze 4"
+  )
   if (!all(ASSAY_NAMES %in% valid_assay_names)) {
     print("assay names:")
     print(ASSAY_NAMES)
@@ -245,7 +242,7 @@ process_genotypes <- function(genotyping_file, fish_used_file, counting_directio
   genotype_data <- genotype_data %>%
     mutate(row_id = row_number())
 
-  return(genotype_data)
+  genotype_data
 }
 
 
@@ -259,10 +256,12 @@ light_dark_preference_analysis <- function(data_file, genotypes) {
   data <- read_csv(I(csv_text), col_types = "dicdddddddddddddddddddddddd")
 
   processed_data <- data %>%
-    pivot_longer(cols = A1_Z1:A12_Z2,
-                 names_to = c("ARENA", "ZONE"),
-                 names_pattern = "A([0-9]+)_Z([1,2])",
-                 values_to = "VALUE") %>%
+    pivot_longer(
+      cols = A1_Z1:A12_Z2,
+      names_to = c("ARENA", "ZONE"),
+      names_pattern = "A([0-9]+)_Z([1,2])",
+      values_to = "VALUE"
+    ) %>%
     mutate(ARENA = as.integer(ARENA), ZONE = as.integer(ZONE)) %>%
     relocate(ARENA, ZONE) %>%
     arrange(ARENA, ZONE) %>%
@@ -270,16 +269,18 @@ light_dark_preference_analysis <- function(data_file, genotypes) {
     mutate(ZONE = case_when(ARENA %in% c(5, 6, 7, 8) & ZONE == 2 ~ 1, .default = ZONE)) %>% # now 1 is always dark
     mutate(ZONE = case_when(ARENA %in% c(5, 6, 7, 8) & ZONE == 3 ~ 2, .default = ZONE)) %>% # and 2 is always light
     group_by(ARENA) %>%
-    summarize(`l/d preference: total light time` = sum(VALUE[ENDPOINT == "TIME_SPENT_IN_ZONE" & ZONE == 2]),
-              `l/d preference: percent distance light` = sum(VALUE[ENDPOINT == "DISTANCE_IN_ZONE" & ZONE == 2]) /
-                sum(VALUE[ENDPOINT == "DISTANCE_IN_ZONE"]) * 100)
+    summarize(
+      `l/d preference: total light time` = sum(VALUE[ENDPOINT == "TIME_SPENT_IN_ZONE" & ZONE == 2]),
+      `l/d preference: percent distance light` = sum(VALUE[ENDPOINT == "DISTANCE_IN_ZONE" & ZONE == 2]) /
+        sum(VALUE[ENDPOINT == "DISTANCE_IN_ZONE"]) * 100
+    )
 
   finished_data <- processed_data %>%
     left_join(genotypes, by = join_by(ARENA == row_id)) %>%
     arrange(clutch, genotype) %>%
     select(clutch, genotype, `l/d preference: total light time`, `l/d preference: percent distance light`)
 
-  return(finished_data)
+  finished_data
 }
 
 light_dark_transition_analysis <- function(data_file, genotypes) {
@@ -288,24 +289,28 @@ light_dark_transition_analysis <- function(data_file, genotypes) {
   data <- read_csv(I(csv_text), col_types = "dcidddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd")
 
   processed_data <- data %>%
-    pivot_longer(cols = A1_Z1:A48_Z2,
-                 names_to = c("ARENA", "ZONE"),
-                 names_pattern = "A([0-9]+)_Z([1,2])",
-                 values_to = "DISTANCE") %>%
+    pivot_longer(
+      cols = A1_Z1:A48_Z2,
+      names_to = c("ARENA", "ZONE"),
+      names_pattern = "A([0-9]+)_Z([1,2])",
+      values_to = "DISTANCE"
+    ) %>%
     mutate(ARENA = as.integer(ARENA), ZONE = as.integer(ZONE)) %>%
     relocate(ARENA, ZONE) %>%
     arrange(ARENA, ZONE) %>%
     group_by(ARENA) %>%
-    summarize(`l/d transition: light/dark ratio` = sum(DISTANCE[CONDITION == "BRIGHT"]) /
-                sum(DISTANCE[CONDITION == "DARK"]),
-              `l/d transition: thigmotaxis` = sum(DISTANCE[ZONE == 1]) / sum(DISTANCE) * 100)
+    summarize(
+      `l/d transition: light/dark ratio` = sum(DISTANCE[CONDITION == "BRIGHT"]) /
+        sum(DISTANCE[CONDITION == "DARK"]),
+      `l/d transition: thigmotaxis` = sum(DISTANCE[ZONE == 1]) / sum(DISTANCE) * 100
+    )
 
   finished_data <- processed_data %>%
     left_join(genotypes, by = join_by(ARENA == row_id)) %>%
     arrange(clutch, genotype) %>%
     select(clutch, genotype, `l/d transition: light/dark ratio`, `l/d transition: thigmotaxis`)
 
-  return(finished_data)
+  finished_data
 }
 
 microtracker_analysis <- function(data_file, genotypes) {
@@ -329,7 +334,7 @@ microtracker_analysis <- function(data_file, genotypes) {
     arrange(clutch, genotype) %>%
     select(clutch, genotype, `microtracker: average locomotor activity`)
 
-  return(finished_data)
+  finished_data
 }
 
 mirror_biting_analysis <- function(data_file, genotypes) {
@@ -338,10 +343,12 @@ mirror_biting_analysis <- function(data_file, genotypes) {
   data <- read_csv(I(csv_text), col_types = "diddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiidddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd")
 
   processed_data <- data %>%
-    pivot_longer(cols = D.A1.Z1:T.A20.Z3,
-                 names_to = c("CATEGORY", "ARENA", "ZONE"),
-                 names_pattern = "([D,C,T])\\.A([0-9]+)\\.Z([1-3])",
-                 values_to = "VALUE") %>%
+    pivot_longer(
+      cols = D.A1.Z1:T.A20.Z3,
+      names_to = c("CATEGORY", "ARENA", "ZONE"),
+      names_pattern = "([D,C,T])\\.A([0-9]+)\\.Z([1-3])",
+      values_to = "VALUE"
+    ) %>%
     mutate(ARENA = as.integer(ARENA), ZONE = as.integer(ZONE)) %>%
     relocate(ARENA, ZONE) %>%
     arrange(ARENA, ZONE) %>%
@@ -353,10 +360,12 @@ mirror_biting_analysis <- function(data_file, genotypes) {
   finished_data <- processed_data %>%
     left_join(genotypes, by = join_by(ARENA == row_id)) %>%
     arrange(clutch, genotype) %>%
-    select(clutch, genotype,
-           `mirror biting: percent mirror time`)
+    select(
+      clutch, genotype,
+      `mirror biting: percent mirror time`
+    )
 
-  return(finished_data)
+  finished_data
 }
 
 social_preference_analysis <- function(data_file, genotypes) {
@@ -365,28 +374,32 @@ social_preference_analysis <- function(data_file, genotypes) {
   data <- read_csv(I(csv_text), col_types = "didddddddddddddddddddddddddddddddddddddddddddddddddd")
 
   processed_data <- data %>%
-    pivot_longer(cols = T.A1.Z1:T.A10.Z5,
-                 names_to = c("ARENA", "ZONE"),
-                 names_pattern = "T.A([0-9]+).Z([1-5])",
-                 values_to = "SECONDS") %>%
+    pivot_longer(
+      cols = T.A1.Z1:T.A10.Z5,
+      names_to = c("ARENA", "ZONE"),
+      names_pattern = "T.A([0-9]+).Z([1-5])",
+      values_to = "SECONDS"
+    ) %>%
     mutate(ARENA = as.integer(ARENA), ZONE = as.integer(ZONE)) %>%
     relocate(ARENA, ZONE) %>%
     arrange(ARENA, ZONE) %>%
     group_by(ARENA) %>%
     summarize(
       `social preference: social preference index` = (sum(SECONDS[ZONE == 4]) +
-                                                        0.5 * sum(SECONDS[ZONE == 3]) -
-                                                        0.5 * sum(SECONDS[ZONE == 2]) -
-                                                        sum(SECONDS[ZONE == 1])) / sum(SECONDS)
+        0.5 * sum(SECONDS[ZONE == 3]) -
+        0.5 * sum(SECONDS[ZONE == 2]) -
+        sum(SECONDS[ZONE == 1])) / sum(SECONDS)
     )
 
   finished_data <- processed_data %>%
     left_join(genotypes, by = join_by(ARENA == row_id)) %>%
     arrange(clutch, genotype) %>%
-    select(clutch, genotype,
-           `social preference: social preference index`)
+    select(
+      clutch, genotype,
+      `social preference: social preference index`
+    )
 
-  return(finished_data)
+  finished_data
 }
 
 startle_response_analysis <- function(data_file, genotypes) {
@@ -407,7 +420,7 @@ startle_response_analysis <- function(data_file, genotypes) {
     arrange(clutch, genotype) %>%
     select(clutch, genotype, `startle response: pre-pulse`, `startle response: startle alone`)
 
-  return(finished_data)
+  finished_data
 }
 
 total_distance_analysis <- function(data_file, genotypes) {
@@ -416,29 +429,35 @@ total_distance_analysis <- function(data_file, genotypes) {
   data <- read_csv(I(csv_text), col_types = "ddicdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd")
 
   processed_data <- data %>%
-    pivot_longer(cols = A1_Z1:A48_Z2,
-                 names_to = c("ARENA", "ZONE"),
-                 names_pattern = "A([0-9]+)_Z([1,2])",
-                 values_to = "DISTANCE") %>%
+    pivot_longer(
+      cols = A1_Z1:A48_Z2,
+      names_to = c("ARENA", "ZONE"),
+      names_pattern = "A([0-9]+)_Z([1,2])",
+      values_to = "DISTANCE"
+    ) %>%
     mutate(ARENA = as.integer(ARENA), ZONE = as.integer(ZONE)) %>%
     relocate(ARENA, ZONE) %>%
     arrange(ARENA, ZONE) %>%
     group_by(ARENA) %>%
-    summarize(`total distance: zone 1 distance` = sum(DISTANCE[ZONE == 1]),
-              `total distance: zone 2 distance` = sum(DISTANCE[ZONE == 2]),
-              `total distance: cumulative distance` = sum(DISTANCE),
-              `total distance: average velocity` = sum(DISTANCE) / 3600)
+    summarize(
+      `total distance: zone 1 distance` = sum(DISTANCE[ZONE == 1]),
+      `total distance: zone 2 distance` = sum(DISTANCE[ZONE == 2]),
+      `total distance: cumulative distance` = sum(DISTANCE),
+      `total distance: average velocity` = sum(DISTANCE) / 3600
+    )
 
   finished_data <- processed_data %>%
     left_join(genotypes, by = join_by(ARENA == row_id)) %>%
     arrange(clutch, genotype) %>%
-    select(clutch, genotype,
-           `total distance: zone 1 distance`,
-           `total distance: zone 2 distance`,
-           `total distance: cumulative distance`,
-           `total distance: average velocity`)
+    select(
+      clutch, genotype,
+      `total distance: zone 1 distance`,
+      `total distance: zone 2 distance`,
+      `total distance: cumulative distance`,
+      `total distance: average velocity`
+    )
 
-  return(finished_data)
+  finished_data
 }
 
 y_maze_analysis <- function(data_file, genotypes) {
@@ -459,22 +478,32 @@ y_maze_analysis <- function(data_file, genotypes) {
       zone == 3 & next_zone == 2 ~ "R"
     )
 
-    return(result)
+    result
   }
 
   # remove center zone and exit data, not needed for analysis
   cleaned_data <- data %>%
     filter(ZONE != 4 & ACTION != "Exit_Zone")
 
-  # make tetragrams and process data
-  processed_data <- cleaned_data %>%
+  prepared_data <- cleaned_data %>%
     group_by(ARENA) %>% # calculate everything per arena
     mutate(next_zone = lead(ZONE)) %>%
+    mutate(next_next_zone = lead(next_zone)) %>%
     filter(ZONE != next_zone) %>% # only care about zone changes
     mutate(turn_direction = zone_sequence_mapping(ZONE, next_zone)) %>%
     mutate(next_turn = lead(turn_direction)) %>%
     mutate(next_next_turn = lead(next_turn)) %>%
-    mutate(next_next_next_turn = lead(next_next_turn)) %>%
+    mutate(next_next_next_turn = lead(next_next_turn))
+
+  triad_data <- prepared_data %>%
+    filter(!is.na(next_next_zone)) %>%
+    mutate(triad = paste0(ZONE, next_zone, next_next_zone)) %>%
+    count(triad, name = "triad_count") %>%
+    summarize(
+      `y-maze: spontaneous alternation` = sum(triad_count[triad %in% c("123", "231", "312", "321", "213", "132")]) / sum(triad_count) * 100
+    )
+
+  tetragram_data <- prepared_data %>%
     filter(!is.na(next_next_next_turn)) %>%
     mutate(tetragram = paste0(
       turn_direction,
@@ -482,21 +511,29 @@ y_maze_analysis <- function(data_file, genotypes) {
       next_next_turn,
       next_next_next_turn
     )) %>% # probably a better way to do this...
-    count(tetragram, name = "count") %>%
-    mutate(percentage = count / sum(count) * 100) %>%
+    count(tetragram, name = "tetragram_count") %>%
     summarize(
-      `y-maze: alternation` = sum(count[tetragram %in% c("LRLR", "RLRL")]) / sum(count) * 100,
-      `y-maze: repetition` = sum(count[tetragram %in% c("LLLL", "RRRR")]) / sum(count) * 100,
-      `y-maze: turns` = sum(count)
+      `y-maze: alternation` = sum(tetragram_count[tetragram %in% c("LRLR", "RLRL")]) / sum(tetragram_count) * 100,
+      `y-maze: repetition` = sum(tetragram_count[tetragram %in% c("LLLL", "RRRR")]) / sum(tetragram_count) * 100,
+      `y-maze: turns` = sum(tetragram_count) + 3,
     )
+
+  processed_data <- full_join(triad_data, tetragram_data)
 
   # add genotyping
   processed_data <- processed_data %>%
     left_join(genotypes, by = join_by(ARENA == row_id)) %>%
     arrange(clutch, genotype) %>%
-    select(clutch, genotype, `y-maze: alternation`, `y-maze: repetition`, `y-maze: turns`)
+    select(
+      clutch,
+      genotype,
+      `y-maze: alternation`,
+      `y-maze: repetition`,
+      `y-maze: turns`,
+      `y-maze: spontaneous alternation`
+    )
 
-  return(processed_data)
+  processed_data
 }
 
 
