@@ -385,10 +385,10 @@ social_preference_analysis <- function(data_file, genotypes) {
     arrange(ARENA, ZONE) %>%
     group_by(ARENA) %>%
     summarize(
-      `social preference: social preference index` = (sum(SECONDS[ZONE == 4]) +
-        0.5 * sum(SECONDS[ZONE == 3]) -
+      `social preference: social preference index` = (sum(SECONDS[ZONE == 1]) +
         0.5 * sum(SECONDS[ZONE == 2]) -
-        sum(SECONDS[ZONE == 1])) / sum(SECONDS)
+        0.5 * sum(SECONDS[ZONE == 4]) -
+        sum(SECONDS[ZONE == 5])) / sum(SECONDS)
     )
 
   finished_data <- processed_data %>%
