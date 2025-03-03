@@ -5,10 +5,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
 from numpy.typing import NDArray
-from scipy import ndimage
+from scipy import signal
 
 
 def load_xy(filepath: str) -> pl.DataFrame:
+    """
+    - Returns columns of the form [XY]_A[0-9]+
+    - Represents X and Y tracking for Arenas
+    - Data in millimeters
+    - Top left of plate is (0, 0)
+    - Bottom right is (127.76, 85.4)
+    """
     with open(filepath, "r") as f:
         xy_data = pl.read_csv(f)
 
@@ -16,40 +23,48 @@ def load_xy(filepath: str) -> pl.DataFrame:
 
 
 def make_map(xy_data: NDArray) -> NDArray:
-    heatmap = np.zeros((1080, 1440))
+    width = 12776
+    height = 8540
+    heatmap = np.zeros((height, width))
 
     for x, y in xy_data:
         if x <= 0.0 and y <= 0.0:
             continue
-        scaled_x = math.floor(x * 1440 / 100)
-        scaled_y = math.floor(y * 1080 / 100)
+        scaled_x = math.floor(x * 100)
+        scaled_y = math.floor(y * 100)
         heatmap[scaled_y, scaled_x] += 1
 
     return heatmap
 
 
-def show_map(map: NDArray) -> None:
-    # mask = map > 0.0
-    # mean = map[mask].mean()
-    # std = map[mask].std()
-    map = ndimage.gaussian_filter(map, 10)
+def show_map(heatmap: NDArray) -> None:
+    # mask = heatmap > 0.0
+    # mean = heatmap[mask].mean()
+    # std = heatmap[mask].std()
+    # heatmap = ndimage.gaussian_filter(heatmap, 50)
+    heatmap = signal.decimate(heatmap, q=10, axis=0, n=3)
+    heatmap = signal.decimate(heatmap, q=10, axis=1, n=3)
+    heatmap = signal.decimate(heatmap, q=10, axis=0, n=3)
+    heatmap = signal.decimate(heatmap, q=10, axis=1, n=3)
 
-    plt.figure(dpi=300)
-    # plt.imshow(map, cmap="magma", vmin=0.0, vmax=mean)
-    plt.matshow(map, cmap="magma")
+    plt.figure(dpi=100)
+    # plt.imshow(heatmap, cmap="magma", vmin=0.0, vmax=mean)
+    plt.matshow(heatmap, cmap="magma")
     plt.show()
 
 
 if __name__ == "__main__":
-    data = load_xy(
-        "./2025/02/18/social_preference/ab/social_preference-20250218T142029-xy_position.csv"
-    )
-    map = np.zeros((1080, 1440))
-    for i in range(1, 9):
-        arena = np.nan_to_num(
-            data.select(f"X_A{i}", f"Y_A{i}").to_numpy().astype(float)
-        )
-        map += make_map(arena)
-        print(map.min(), map.max(), map.mean(), map.std())
+    import glob
 
-    show_map(map)
+    filenames = glob.glob("*/*/*/social_preference/*/*xy_position.csv")
+    for filename in filenames:
+        data = load_xy(filename)
+        heatmap = np.zeros((8540, 12776))
+        for i in range(1, 11):
+            arena = np.nan_to_num(
+                data.select(f"X_A{i}", f"Y_A{i}").to_numpy().astype(float)
+            )
+            heatmap += make_map(arena)
+            print(heatmap.min(), heatmap.max(), heatmap.mean(), heatmap.std())
+
+        show_map(heatmap)
