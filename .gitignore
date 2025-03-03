@@ -1,7 +1,5 @@
 # User added
-2024/
-2025/
-figures/
+data/
 *.xlsx
 *.csv
 !templates/*
