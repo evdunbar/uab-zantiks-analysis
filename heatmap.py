@@ -1,21 +1,31 @@
 #!/usr/bin/env uv run
 import math
+import re
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
 from numpy.typing import NDArray
+from PIL import Image
 from scipy import signal
+
+mpl.rc("text", usetex=True)
 
 
 class Heatmap:
-    def __init__(self, path: str):
-        self.xy_data = self._load_xy(path)
-        self.num_arenas = int((self.xy_data.width - 1) / 2)
+    def __init__(self, data_path: str, arena_map_path: str):
+        self.xy_data = self._load_xy(data_path)
+        arena_map = self._load_image(arena_map_path)
+        self.arena_mask = arena_map.sum(-1) < 10
 
-        width = 12776
-        height = 8540
-        self.map = np.zeros((height, width))
+        self.num_arenas = int((self.xy_data.width - 1) / 2)
+        self.map = np.zeros_like(self.arena_mask, dtype=float)
+
+        self.width = 127.76
+        self.height = 85.4
+        self.date = self._value_from_path(data_path, r".*(\d{4})(\d{2})(\d{2})T")
+        self.group = self._value_from_path(data_path, r".*/([abcd]+)/.*")
 
     def _load_xy(self, filepath: str) -> pl.DataFrame:
         """
@@ -30,41 +40,61 @@ class Heatmap:
 
         return xy_data
 
-    def make_map(self) -> NDArray:
+    def _load_image(self, filepath: str) -> NDArray:
+        with open(filepath, "rb") as f:
+            image = np.asarray(Image.open(f))
+
+        return image
+
+    def _value_from_path(self, path: str, query: str) -> tuple | None:
+        regexp = re.compile(query)
+        if (maybe_matches := regexp.search(path)) is not None:
+            return maybe_matches.groups()
+        else:
+            return None
+
+    def make_map(self, *, show: bool = False):
         for i in range(1, self.num_arenas + 1):
             arena = np.nan_to_num(
                 self.xy_data.select(f"X_A{i}", f"Y_A{i}").to_numpy().astype(float)
             )
             self.map += self._process_arena(arena)
 
-        return self.map
+        if show:
+            self.show_map()
 
     def _process_arena(self, arena_data: NDArray) -> NDArray:
         for x, y in arena_data:
             if x <= 0.0 and y <= 0.0:
                 continue
-            scaled_x = math.floor(x * 100)
-            scaled_y = math.floor(y * 100)
+            scaled_x = math.floor(x / self.width * self.map.shape[1])
+            scaled_y = math.floor(y / self.height * self.map.shape[0])
             self.map[scaled_y, scaled_x] += 1
 
         return self.map
 
     def show_map(self) -> None:
-        self.map = signal.decimate(self.map, q=10, axis=0, n=3)
-        self.map = signal.decimate(self.map, q=10, axis=1, n=3)
-        self.map = signal.decimate(self.map, q=10, axis=0, n=3)
-        self.map = signal.decimate(self.map, q=10, axis=1, n=3)
+        plot_buffer = self.map.copy()
+        plot_buffer[self.arena_mask] = 0.0
+        plot_buffer = signal.decimate(plot_buffer, q=10, axis=0, n=3)
+        plot_buffer = signal.decimate(plot_buffer, q=10, axis=1, n=3)
+
+        title = r"\textbf{Social Preference}"
+        if self.group is not None:
+            title += f" \\textit{{Group(s) {self.group[0].upper()}}}"
+        if self.date is not None:
+            title += f" {self.date[1]}-{self.date[2]}-{self.date[0]}"
 
         plt.figure(dpi=100)
-        plt.imshow(self.map, cmap="magma", vmin=0.0)
+        plt.title(title)
+        plt.imshow(plot_buffer, cmap="magma")
+        plt.axis("off")
         plt.show()
 
 
 if __name__ == "__main__":
     import glob
 
-    filenames = glob.glob("*/*/*/social_preference/*/*xy_position.csv")
+    filenames = glob.glob("data/*/*/*/social_preference/*/*xy_position.csv")
     for filename in filenames:
-        heatmap = Heatmap(filename)
-        heatmap.make_map()
-        heatmap.show_map()
+        Heatmap(filename, "./data/social_preference_arenas.bmp").make_map(show=True)
