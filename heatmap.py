@@ -8,7 +8,6 @@ import numpy as np
 import polars as pl
 from numpy.typing import NDArray
 from PIL import Image
-from scipy import signal
 
 mpl.rc("text", usetex=True)
 
@@ -75,9 +74,8 @@ class Heatmap:
 
     def show_map(self) -> None:
         plot_buffer = self.map.copy()
+
         plot_buffer[self.arena_mask] = 0.0
-        plot_buffer = signal.decimate(plot_buffer, q=10, axis=0, n=3)
-        plot_buffer = signal.decimate(plot_buffer, q=10, axis=1, n=3)
 
         title = r"\textbf{Social Preference}"
         if self.group is not None:
@@ -90,6 +88,9 @@ class Heatmap:
         plt.imshow(plot_buffer, cmap="magma")
         plt.axis("off")
         plt.show()
+
+    def _create_kernel(self, radius: int) -> NDArray:
+        pass
 
 
 if __name__ == "__main__":
