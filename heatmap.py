@@ -8,6 +8,7 @@ import numpy as np
 import polars as pl
 from numpy.typing import NDArray
 from PIL import Image
+from scipy import ndimage
 
 mpl.rc("text", usetex=True)
 
@@ -21,8 +22,8 @@ class Heatmap:
         self.num_arenas = int((self.xy_data.width - 1) / 2)
         self.map = np.zeros_like(self.arena_mask, dtype=float)
 
-        self.width = 127.76
-        self.height = 85.4
+        self.scale = 10.02272713
+        self.bias = 76.05767812
         self.date = self._value_from_path(data_path, r".*(\d{4})(\d{2})(\d{2})T")
         self.group = self._value_from_path(data_path, r".*/([abcd]+)/.*")
 
@@ -54,10 +55,11 @@ class Heatmap:
 
     def make_map(self, *, show: bool = False):
         for i in range(1, self.num_arenas + 1):
+            self.show_map()
             arena = np.nan_to_num(
                 self.xy_data.select(f"X_A{i}", f"Y_A{i}").to_numpy().astype(float)
             )
-            self.map += self._process_arena(arena)
+            self._process_arena(arena)
 
         if show:
             self.show_map()
@@ -66,16 +68,20 @@ class Heatmap:
         for x, y in arena_data:
             if x <= 0.0 and y <= 0.0:
                 continue
-            scaled_x = math.floor(x / self.width * self.map.shape[1])
-            scaled_y = math.floor(y / self.height * self.map.shape[0])
+            scaled_x = math.floor(x * self.scale + self.bias)
+            scaled_y = math.floor(y * self.scale + self.bias)
             self.map[scaled_y, scaled_x] += 1
 
         return self.map
 
-    def show_map(self) -> None:
+    def show_map(self, sum_radius: float = 10) -> None:
+        masked_plot = np.ma.masked_array(
+            self.map, mask=np.bitwise_invert(self.arena_mask)
+        )
+        masked_plot[self.arena_mask] = 0.0
         plot_buffer = self.map.copy()
-
-        plot_buffer[self.arena_mask] = 0.0
+        plot_buffer = ndimage.gaussian_filter(plot_buffer, sum_radius)
+        # plot_buffer[self.arena_mask] = 0.0
 
         title = r"\textbf{Social Preference}"
         if self.group is not None:
@@ -86,16 +92,15 @@ class Heatmap:
         plt.figure(dpi=100)
         plt.title(title)
         plt.imshow(plot_buffer, cmap="magma")
+        plt.imshow(masked_plot, cmap="Greens_r")
         plt.axis("off")
         plt.show()
-
-    def _create_kernel(self, radius: int) -> NDArray:
-        pass
 
 
 if __name__ == "__main__":
     import glob
 
     filenames = glob.glob("data/*/*/*/social_preference/*/*xy_position.csv")
-    for filename in filenames:
+    # for filename in filenames:
+    for filename in (filenames[2],):
         Heatmap(filename, "./data/social_preference_arenas.bmp").make_map(show=True)
