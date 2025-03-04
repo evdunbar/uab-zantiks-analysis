@@ -103,4 +103,4 @@ if __name__ == "__main__":
     filenames = glob.glob("data/*/*/*/social_preference/*/*xy_position.csv")
     # for filename in filenames:
     for filename in (filenames[2],):
-        Heatmap(filename, "./data/social_preference_arenas.bmp").make_map(show=True)
+        Heatmap(filename, "data/social_preference_arenas.bmp").make_map(show=True)
