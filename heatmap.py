@@ -14,16 +14,20 @@ mpl.rc("text", usetex=True)
 
 
 class Heatmap:
-    def __init__(self, data_path: str, arena_map_path: str):
+    def __init__(
+        self, data_path: str, arena_map_path: str, scale_factors: tuple[NDArray]
+    ):
         self.xy_data = self._load_xy(data_path)
         arena_map = self._load_image(arena_map_path)
         self.arena_mask = arena_map.sum(-1) < 10
+        self.x_bias = scale_factors[0][0]
+        self.x_scale = scale_factors[0][1]
+        self.y_bias = scale_factors[1][0]
+        self.y_scale = scale_factors[1][1]
 
         self.num_arenas = int((self.xy_data.width - 1) / 2)
         self.map = np.zeros_like(self.arena_mask, dtype=float)
 
-        self.scale = 10.02272713
-        self.bias = 76.05767812
         self.date = self._value_from_path(data_path, r".*(\d{4})(\d{2})(\d{2})T")
         self.group = self._value_from_path(data_path, r".*/([abcd]+)/.*")
 
@@ -55,7 +59,6 @@ class Heatmap:
 
     def make_map(self, *, show: bool = False):
         for i in range(1, self.num_arenas + 1):
-            self.show_map()
             arena = np.nan_to_num(
                 self.xy_data.select(f"X_A{i}", f"Y_A{i}").to_numpy().astype(float)
             )
@@ -68,8 +71,8 @@ class Heatmap:
         for x, y in arena_data:
             if x <= 0.0 and y <= 0.0:
                 continue
-            scaled_x = math.floor(x * self.scale + self.bias)
-            scaled_y = math.floor(y * self.scale + self.bias)
+            scaled_x = math.floor(x * self.x_scale + self.x_bias)
+            scaled_y = math.floor(y * self.y_scale + self.y_bias)
             self.map[scaled_y, scaled_x] += 1
 
         return self.map
@@ -100,7 +103,15 @@ class Heatmap:
 if __name__ == "__main__":
     import glob
 
+    import find_mapping
+
     filenames = glob.glob("data/*/*/*/social_preference/*/*xy_position.csv")
-    # for filename in filenames:
-    for filename in (filenames[2],):
-        Heatmap(filename, "data/social_preference_arenas.bmp").make_map(show=True)
+    mapping_finder = find_mapping.MapFinder(filenames)
+    mapping_finder.find_mappings()
+    scale_factors = mapping_finder.mappings
+
+    # for filename in (filenames[2],):
+    for filename in filenames:
+        Heatmap(filename, "data/social_preference_arenas.bmp", scale_factors).make_map(
+            show=True
+        )

@@ -6,6 +6,7 @@ import polars as pl
 from numpy.typing import NDArray
 from PIL import Image
 from polars import selectors as cs
+from scipy import linalg
 
 
 class MapFinder:
@@ -21,10 +22,17 @@ class MapFinder:
         # computed
         self.min_dfs = [df.min() for df in self.pos_dfs]
         self.max_dfs = [df.max() for df in self.pos_dfs]
-        self.x_mins = self.direction_to_numpy(self.min_dfs, "X")
-        self.x_maxs = self.direction_to_numpy(self.max_dfs, "X")
-        self.y_mins = self.direction_to_numpy(self.min_dfs, "Y")
-        self.y_maxs = self.direction_to_numpy(self.max_dfs, "Y")
+        self.x_mins = self.direction_to_numpy(self.min_dfs, "X").min(axis=0)
+        self.x_maxs = self.direction_to_numpy(self.max_dfs, "X").max(axis=0)
+        self.y_mins = self.direction_to_numpy(self.min_dfs, "Y").min(axis=0)
+        self.y_maxs = self.direction_to_numpy(self.max_dfs, "Y").max(axis=0)
+        self.xs = np.ma.concatenate((self.x_mins, self.x_maxs))
+        self.ys = np.ma.concatenate((self.y_mins, self.y_maxs))
+        arena_x_mins, arena_x_maxs, arena_y_mins, arena_y_maxs = (
+            self.find_arena_mins_maxs()
+        )
+        self.arena_xs = np.concatenate((arena_x_mins, arena_x_maxs))
+        self.arena_ys = np.concatenate((arena_y_mins, arena_y_maxs))
 
     def _load_dataframe(self, filepath: str) -> pl.DataFrame:
         with open(filepath, "r") as f:
@@ -42,9 +50,9 @@ class MapFinder:
         arrays = [
             df.select(cs.starts_with(direction)).to_numpy().astype(float) for df in dfs
         ]
-        return np.ma.masked_array(arrays, np.isnan(arrays))
+        return np.ma.masked_array(arrays, np.isnan(arrays)).squeeze()
 
-    def arena_mins_maxs(self) -> tuple[NDArray, NDArray, NDArray, NDArray]:
+    def find_arena_mins_maxs(self) -> tuple[NDArray, NDArray, NDArray, NDArray]:
         x_mins = []
         x_maxs = []
         y_mins = []
@@ -77,10 +85,26 @@ class MapFinder:
         y_maxs = np.asarray(y_maxs)
         return x_mins, x_maxs, y_mins, y_maxs
 
+    def find_mappings(self):
+        self.mappings = []
+        for positions, arena_positions in (
+            (self.xs, self.arena_xs),
+            (self.ys, self.arena_ys),
+        ):
+            mask = np.bitwise_not(positions.mask)
+            positions = positions.data[mask]
+            arena_positions = arena_positions[mask]
+
+            # a + b(positions) = arena_positions
+            m = positions[:, np.newaxis] ** (0, 1)
+            least_squares = linalg.lstsq(m, arena_positions)
+            coefficients = least_squares[0]
+            self.mappings.append(coefficients)
+
 
 if __name__ == "__main__":
     import glob
 
     filenames = glob.glob("data/*/*/*/social_preference/*/*xy_position.csv")
     mf = MapFinder(filenames)
-    print(mf.arena_mins_maxs())
+    mf.find_mappings()
