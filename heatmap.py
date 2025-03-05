@@ -124,7 +124,6 @@ if __name__ == "__main__":
     mapping_finder.find_mappings()
     scale_factors = mapping_finder.mappings
 
-    # for filename in (filenames[2],):
     for filename in filenames:
         Heatmap(filename, "data/social_preference_arenas.bmp", scale_factors).make_map(
             show=True
