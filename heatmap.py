@@ -84,19 +84,33 @@ class Heatmap:
         masked_plot[self.arena_mask] = 0.0
         plot_buffer = self.map.copy()
         plot_buffer = ndimage.gaussian_filter(plot_buffer, sum_radius)
-        # plot_buffer[self.arena_mask] = 0.0
 
-        title = r"\textbf{Social Preference}"
+        plot_title = r"\textbf{Social Preference}"
+        save_title = "social_preference"
         if self.group is not None:
-            title += f" \\textit{{Group(s) {self.group[0].upper()}}}"
+            plot_title += f" \\textit{{Group(s) {self.group[0].upper()}}}"
+            save_title += f"_{self.group[0].upper()}"
         if self.date is not None:
-            title += f" {self.date[1]}-{self.date[2]}-{self.date[0]}"
+            plot_title += f" {self.date[1]}-{self.date[2]}-{self.date[0]}"
+            save_title += f"_{self.date[1]}-{self.date[2]}-{self.date[0]}"
 
         plt.figure(dpi=100)
-        plt.title(title)
-        plt.imshow(plot_buffer, cmap="magma")
-        plt.imshow(masked_plot, cmap="Greens_r")
-        plt.axis("off")
+        plt.title(plot_title)
+        im = plt.imshow(plot_buffer, cmap="viridis")
+        plt.imshow(masked_plot, cmap="binary")
+        plt.colorbar(
+            im, label="Frequency", orientation="vertical", shrink=0.805, aspect=13
+        )
+        plt.xticks([])
+        plt.yticks([])
+        plt.gca().set_xticklabels([])
+        plt.gca().set_yticklabels([])
+        plt.box(on=True)
+        plt.savefig(
+            f"data/figures/{save_title}.png",
+            dpi=500,
+            bbox_inches="tight",
+        )
         plt.show()
 
 
