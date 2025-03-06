@@ -40,10 +40,14 @@ class ZantiksData:
             if not zantiks_file.is_xy:
                 lines = f.readlines()
                 f = io.StringIO("".join(lines[3:-1]))
-            self.data = self._expand_zones_and_arenas(pl.read_csv(f))
+            data = pl.read_csv(f)
+        if zantiks_file.is_xy:
+            self.data = self._expand_arenas(data)
+        else:
+            self.data = self._expand_zones_and_arenas(data)
 
         with open(zantiks_file.genotypes_path, "r") as f:
-            self.genotypes = pl.read_csv(f).drop_nulls("Cluster")
+            self.genotypes: pl.DataFrame = pl.read_csv(f).drop_nulls("Cluster")
 
         self._attach_genotypes()
 
@@ -63,11 +67,11 @@ class ZantiksData:
             [
                 pl.col("ZONE_CODE")
                 .str.extract(r"T\.A(\d+)", 1)
-                .cast(pl.Int64)
+                .cast(pl.Int32)
                 .alias("ARENA"),
                 pl.col("ZONE_CODE")
                 .str.extract(r"Z(\d+)", 1)
-                .cast(pl.Int64)
+                .cast(pl.Int32)
                 .alias("ZONE"),
             ]
         )
@@ -86,6 +90,47 @@ class ZantiksData:
             result = long_df
 
         result = result.select(["TIME", "BIN_NUMBER", "ARENA", "ZONE", "TIME_IN_ZONE"])
+        return result
+
+    def _expand_arenas(self, df: pl.DataFrame) -> pl.DataFrame:
+        pattern = re.compile(r"[XY]_A(\d+)")
+
+        long_df = df.unpivot(
+            index="RUNTIME", on=[col for col in df.columns if re.match(pattern, col)]
+        )
+        long_df = long_df.with_columns(
+            [
+                pl.col("variable")
+                .str.extract(r"(\d+)", 1)
+                .cast(pl.Int32)
+                .alias("ARENA"),
+                pl.col("variable").str.extract(r"([XY])", 1).alias("direction"),
+            ]
+        )
+        long_df = long_df.filter(pl.col("direction") == "X").join(
+            long_df.filter(pl.col("direction") == "Y"),
+            on=("ARENA", "RUNTIME"),
+        )
+        long_df = long_df.select(
+            "RUNTIME",
+            "ARENA",
+            X=pl.col("value").cast(pl.Float64),
+            Y=pl.col("value_right").cast(pl.Float64),
+        )
+
+        zero_arenas = (
+            long_df.group_by("ARENA")
+            .sum()
+            .filter(pl.col("X") <= 0.0)
+            .filter(pl.col("Y") <= 0.0)
+            .select("ARENA")
+        )
+        if not zero_arenas.is_empty():
+            zero_arena_list = zero_arenas["ARENA"].to_list()
+            result = long_df.filter(~pl.col("ARENA").is_in(zero_arena_list))
+        else:
+            result = long_df
+
         return result
 
     def _attach_genotypes(self) -> None:
@@ -198,7 +243,7 @@ class DataLoader:
 
 if __name__ == "__main__":
     dl = DataLoader().add_by_filter(
-        assay_types=("social_preference",), data_type="zantiks"
+        assay_types=("social_preference",), data_type="position"
     )
     dfs = dl.load_all()
     for df in dfs:
