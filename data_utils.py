@@ -40,39 +40,17 @@ class ZantiksData:
             if not zantiks_file.is_xy:
                 lines = f.readlines()
                 f = io.StringIO("".join(lines[3:-1]))
-            self.data = self.expand_zones_and_arenas(pl.read_csv(f))
+            self.data = self._expand_zones_and_arenas(pl.read_csv(f))
 
         with open(zantiks_file.genotypes_path, "r") as f:
-            self.genotypes = pl.read_csv(f)
+            self.genotypes = pl.read_csv(f).drop_nulls("Cluster")
 
-        self.genotype_filter = None
+        self._attach_genotypes()
 
     def __repr__(self):
         return "\n" + str(self.genotypes) + "\n" + str(self.data)
 
-    def set_genotype_filter(self, *args: str) -> None:
-        if not args:
-            self.genotype_filter = None
-            return
-
-        # else
-        new_filter = []
-        for arg in args:
-            upper_arg = arg.upper()
-            if upper_arg == "WT":
-                new_filter.append("WT")
-            elif upper_arg == "HOM":
-                new_filter.append("HOM")
-            elif upper_arg == "HET":
-                new_filter.append("HET")
-            else:
-                print(f"{arg} is not a recognized genotype")
-        if not new_filter:
-            return
-
-        self.genotype_filter = new_filter
-
-    def expand_zones_and_arenas(self, df: pl.DataFrame):
+    def _expand_zones_and_arenas(self, df: pl.DataFrame) -> pl.DataFrame:
         pattern = re.compile(r"T\.A(\d+)\.Z(\d+)")
 
         long_df = df.unpivot(
@@ -93,14 +71,45 @@ class ZantiksData:
                 .alias("ZONE"),
             ]
         )
+        long_df = long_df.drop("ZONE_CODE")
 
-        result = long_df.drop("ZONE_CODE").select(
-            ["TIME", "BIN_NUMBER", "ARENA", "ZONE", "TIME_IN_ZONE"]
+        zero_arenas = (
+            long_df.group_by("ARENA")
+            .agg(pl.sum("TIME_IN_ZONE").alias("TOTAL_TIME"))
+            .filter(pl.col("TOTAL_TIME") == 0)
+            .select("ARENA")
         )
+        if not zero_arenas.is_empty():
+            zero_arena_list = zero_arenas["ARENA"].to_list()
+            result = long_df.filter(~pl.col("ARENA").is_in(zero_arena_list))
+        else:
+            result = long_df
+
+        result = result.select(["TIME", "BIN_NUMBER", "ARENA", "ZONE", "TIME_IN_ZONE"])
         return result
 
-    def filtered_data(self) -> pl.DataFrame:
-        pass
+    def _attach_genotypes(self) -> None:
+        if "A" in self.info.groups:
+            genotype_mapping = self.genotypes.select("Cluster").with_row_index(offset=1)
+        elif self.info.groups == ("B",):
+            genotype_mapping = self.genotypes.select(
+                (pl.int_range(pl.len(), dtype=pl.Int32) - 2).alias("index"), "Cluster"
+            )
+        elif self.info.groups == ("C", "D"):
+            genotype_length = len(self.genotypes["Cluster"])
+            genotype_mapping = self.genotypes.select(
+                (
+                    pl.int_range(pl.len(), dtype=pl.Int32) - (genotype_length // 2) + 1
+                ).alias("index"),
+                "Cluster",
+            )
+        else:
+            raise ValueError(
+                f"Zantiks data groups not understood. File: {self.info.path}, Groups: {self.info.groups}."
+            )
+        self.data = self.data.join(
+            genotype_mapping, left_on="ARENA", right_on="index", maintain_order="left"
+        )
 
 
 class DataLoader:
@@ -186,4 +195,9 @@ if __name__ == "__main__":
         assay_types=("social_preference",), data_type="zantiks"
     )
     dfs = dl.load_all()
-    print(dfs)
+    for df in dfs:
+        print(df.info)
+        print(df)
+    # test = dfs[0]
+    # print(test.info)
+    # print(test)
