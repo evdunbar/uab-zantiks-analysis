@@ -2,6 +2,7 @@
 
 import glob
 import io
+import re
 from typing import Iterable, Literal, Self, Sequence
 
 import polars as pl
@@ -39,13 +40,67 @@ class ZantiksData:
             if not zantiks_file.is_xy:
                 lines = f.readlines()
                 f = io.StringIO("".join(lines[3:-1]))
-            self.data = pl.read_csv(f)
+            self.data = self.expand_zones_and_arenas(pl.read_csv(f))
 
         with open(zantiks_file.genotypes_path, "r") as f:
             self.genotypes = pl.read_csv(f)
 
+        self.genotype_filter = None
+
     def __repr__(self):
         return "\n" + str(self.genotypes) + "\n" + str(self.data)
+
+    def set_genotype_filter(self, *args: str) -> None:
+        if not args:
+            self.genotype_filter = None
+            return
+
+        # else
+        new_filter = []
+        for arg in args:
+            upper_arg = arg.upper()
+            if upper_arg == "WT":
+                new_filter.append("WT")
+            elif upper_arg == "HOM":
+                new_filter.append("HOM")
+            elif upper_arg == "HET":
+                new_filter.append("HET")
+            else:
+                print(f"{arg} is not a recognized genotype")
+        if not new_filter:
+            return
+
+        self.genotype_filter = new_filter
+
+    def expand_zones_and_arenas(self, df: pl.DataFrame):
+        pattern = re.compile(r"T\.A(\d+)\.Z(\d+)")
+
+        long_df = df.unpivot(
+            index=["TIME", "BIN_NUMBER"],
+            on=[col for col in df.columns if re.match(pattern, col)],
+            variable_name="ZONE_CODE",
+            value_name="TIME_IN_ZONE",
+        )
+        long_df = long_df.with_columns(
+            [
+                pl.col("ZONE_CODE")
+                .str.extract(r"T\.A(\d+)", 1)
+                .cast(pl.Int64)
+                .alias("ARENA"),
+                pl.col("ZONE_CODE")
+                .str.extract(r"Z(\d+)", 1)
+                .cast(pl.Int64)
+                .alias("ZONE"),
+            ]
+        )
+
+        result = long_df.drop("ZONE_CODE").select(
+            ["TIME", "BIN_NUMBER", "ARENA", "ZONE", "TIME_IN_ZONE"]
+        )
+        return result
+
+    def filtered_data(self) -> pl.DataFrame:
+        pass
 
 
 class DataLoader:
