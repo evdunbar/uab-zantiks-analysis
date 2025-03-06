@@ -111,6 +111,12 @@ class ZantiksData:
             genotype_mapping, left_on="ARENA", right_on="index", maintain_order="left"
         )
 
+    def get_genotype(self, genotype: str | Iterable[str]) -> pl.DataFrame:
+        if genotype is str:
+            genotype = (genotype,)
+
+        return self.data.filter(pl.col("Cluster").is_in(genotype))
+
 
 class DataLoader:
     def __init__(self):
@@ -197,7 +203,4 @@ if __name__ == "__main__":
     dfs = dl.load_all()
     for df in dfs:
         print(df.info)
-        print(df)
-    # test = dfs[0]
-    # print(test.info)
-    # print(test)
+        print(df.get_genotype(("WT", "HOM")))
