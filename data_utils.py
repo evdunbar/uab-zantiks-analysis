@@ -101,22 +101,29 @@ class ZantiksFile:
     def __init__(self, path: str):
         self.path = path
         parts = path.split("/")
-        self.filename = parts.pop()
-        self.groups = tuple(parts.pop().upper())
-        self.assay_type = self.assay_types[parts.pop()]()
-        self.genotypes_path = "/".join(parts) + "/genotypes.csv"
-        self.day = parts.pop()
-        self.month = parts.pop()
-        self.year = parts.pop()
-        self.prefix = "".join(parts)
+        self.filename = parts[-1]
+        filename_parts = self.filename.split("-")
+        self.groups = self._parse_groups(parts[-2])
+        self.assay_type = self.assay_types[filename_parts[0]]()
+        self.genotypes_path = self._find_run_day_path() + "/genotypes.csv"
+        self.year = filename_parts[1][:4]
+        self.month = filename_parts[1][4:6]
+        self.day = filename_parts[1][6:8]
 
         self.is_xy = "xy" in self.filename or "XY" in self.filename
 
     def __repr__(self):
-        return f"ZantiksFile({self.prefix}, {self.year}, {self.month}, {self.day}, {self.assay_type}, {self.groups}, {self.filename}) - is_xy: {self.is_xy}"
+        return f"ZantiksFile({self.year}, {self.month}, {self.day}, {self.assay_type}, {self.groups}, {self.filename}) - is_xy: {self.is_xy}"
 
-    def __str__(self):
-        return self.path
+    def _parse_groups(self, groups: str) -> tuple[str]:
+        if groups.startswith("zantiks"):
+            return (groups[-1].upper(),)
+        else:
+            return tuple(groups.upper())
+
+    def _find_run_day_path(self):
+        date_folders_expression = re.compile(r".*\d{4}/\d{2}/\d{2}/")
+        return date_folders_expression.search(self.path)[0]
 
 
 class ZantiksData:
@@ -264,36 +271,33 @@ class DataLoader:
         groups: Iterable[str] | None = None,
         data_type: Literal["zantiks"] | Literal["position"] | None = None,
     ) -> Self:
-        pathglob = "data/"
+        pathglob = "**/"
+
+        if groups:
+            pathglob += f"{self._iterable_glob(groups)}/"
+
+        if assay_types:
+            pathglob += self._iterable_glob(assay_types)
+        elif pathglob[-1] != "*":
+            pathglob += "*"
 
         if dates:
             date_patterns = []
             for date in dates:
                 year = str(date[0])
-                month = f"{date[1]:02d}" if date[1] is not None else "*"
-                day = f"{date[2]:02d}" if date[2] is not None else "*"
-                date_patterns.append(f"{year}/{month}/{day}")
+                month = f"{date[1]:02d}" if date[1] is not None else ""
+                day = f"{date[2]:02d}" if date[2] is not None else ""
+                date_patterns.append(f"{year}{month}{day}")
 
-            pathglob += f"{self._iterable_glob(date_patterns)}/"
-        else:
-            pathglob += "*/*/*/"
+            pathglob += f"-{self._iterable_glob(date_patterns)}*"
+        elif pathglob[-1] != "*":
+            pathglob += "*"
 
-        if assay_types:
-            pathglob += f"{self._iterable_glob(assay_types)}/"
-        else:
-            pathglob += "*/"
+        if pathglob[-1] != "*":
+            pathglob += "*"
+        pathglob += ".csv"
 
-        if groups:
-            pathglob += f"{self._iterable_glob(groups)}/"
-        else:
-            pathglob += "*/"
-
-        # can't parse data_type yet
-        pathglob += "*.csv"
-
-        # collect files
-        matching_paths = glob.glob(pathglob)
-
+        matching_paths = glob.glob(pathglob, recursive=True)
         if data_type == "zantiks":
             matching_paths = [path for path in matching_paths if "xy" not in path]
         elif data_type == "position":
@@ -331,9 +335,9 @@ class DataLoader:
 
 if __name__ == "__main__":
     dl = DataLoader().add_by_filter(
-        assay_types=("social_preference",), data_type="position"
+        assay_types=("light_dark_transition",), data_type="position"
     )
     dfs = dl.load_all()
     for df in dfs:
         print(df.info)
-        print(df.get_genotype(("WT", "HOM")))
+        # print(df.get_genotype(("WT", "HOM")))
