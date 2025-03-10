@@ -40,7 +40,7 @@ class Heatmap:
 
         return image
 
-    def make_map(self, *, show: bool = False):
+    def make_map(self, *, by_arena: bool = False, show: bool = False):
         for arena_id in self.xy_data["ARENA"].unique().sort():
             arena = np.nan_to_num(
                 self.xy_data.filter(pl.col("ARENA") == arena_id)
@@ -116,7 +116,10 @@ if __name__ == "__main__":
     for zantiks_data in all_zantiks_data:
         Heatmap(
             zantiks_data,
-            ("HOM",),
+            (
+                "WT",
+                "HOM",
+            ),
             "data/social_preference_arenas.bmp",
             scale_factors,
-        ).make_map(show=True)
+        ).make_map(by_arena=True, show=True)

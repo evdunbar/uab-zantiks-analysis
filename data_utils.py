@@ -3,6 +3,7 @@
 import glob
 import io
 import re
+from abc import ABC, abstractmethod
 from typing import Iterable, Literal, Self, Sequence
 
 import polars as pl
@@ -10,13 +11,99 @@ import polars as pl
 type VariableDate = Sequence[int, int | None, int | None]
 
 
+class Assay(ABC):
+    @property
+    @abstractmethod
+    def total_arenas(self) -> int:
+        pass
+
+    @property
+    @abstractmethod
+    def arenas_per_group(self) -> int | None:
+        pass
+
+
+class LightDarkPreference3wpf(Assay):
+    def total_arenas(self) -> int:
+        return 12
+
+    def arenas_per_group(self) -> int | None:
+        return 4
+
+
+class LightDarkPreference6dpf(Assay):
+    def total_arenas(self) -> int:
+        return 12
+
+    def arenas_per_group(self) -> int | None:
+        return 12
+
+
+class LightDarkTransition(Assay):
+    def total_arenas(self) -> int:
+        return 48
+
+    def arenas_per_group(self) -> int | None:
+        return None
+
+
+class MirrorBiting(Assay):
+    def total_arenas(self) -> int:
+        return 20
+
+    def arenas_per_group(self) -> int | None:
+        return 4
+
+
+class SocialPreference(Assay):
+    def total_arenas(self) -> int:
+        return 10
+
+    def arenas_per_group(self) -> int | None:
+        return 4
+
+
+class StartleResponse(Assay):
+    def total_arenas(self) -> int:
+        return 48
+
+    def arenas_per_group(self) -> int | None:
+        return None
+
+
+class Ymaze15(Assay):
+    def total_arenas(self) -> int:
+        return 15
+
+    def arenas_per_group(self) -> int | None:
+        return 12
+
+
+class Ymaze4(Assay):
+    def total_arenas(self) -> int:
+        return 4
+
+    def arenas_per_group(self) -> int | None:
+        return 4
+
+
 class ZantiksFile:
+    assay_types = {
+        "light_dark_preference": LightDarkPreference3wpf,
+        "light_dark_transition": LightDarkTransition,
+        "mirror_biting": MirrorBiting,
+        "social_preference": SocialPreference,
+        "startle_response": StartleResponse,
+        "ymaze_15": Ymaze15,
+        "ymaze_4": Ymaze4,
+    }
+
     def __init__(self, path: str):
         self.path = path
         parts = path.split("/")
         self.filename = parts.pop()
         self.groups = tuple(parts.pop().upper())
-        self.assay_type = parts.pop()
+        self.assay_type = self.assay_types[parts.pop()]()
         self.genotypes_path = "/".join(parts) + "/genotypes.csv"
         self.day = parts.pop()
         self.month = parts.pop()
@@ -33,7 +120,7 @@ class ZantiksFile:
 
 
 class ZantiksData:
-    def __init__(self, zantiks_file: ZantiksFile):
+    def __init__(self, zantiks_file: ZantiksFile, use_genotypes: bool = True):
         self.info = zantiks_file
 
         with open(zantiks_file.path, "r") as f:
@@ -46,10 +133,11 @@ class ZantiksData:
         else:
             self.data = self._expand_zones_and_arenas(data)
 
-        with open(zantiks_file.genotypes_path, "r") as f:
-            self.genotypes: pl.DataFrame = pl.read_csv(f).drop_nulls("Cluster")
+        if use_genotypes:
+            with open(zantiks_file.genotypes_path, "r") as f:
+                self.genotypes: pl.DataFrame = pl.read_csv(f).drop_nulls("Cluster")
 
-        self._attach_genotypes()
+            self._attach_genotypes()
 
     def __repr__(self):
         return "\n" + str(self.genotypes) + "\n" + str(self.data)
@@ -233,10 +321,10 @@ class DataLoader:
 
         return self
 
-    def load_all(self) -> list[ZantiksData]:
+    def load_all(self, *args, **kwargs) -> list[ZantiksData]:
         data = []
         for zantiks_file in self.zantiks_files:
-            data.append(ZantiksData(zantiks_file))
+            data.append(ZantiksData(zantiks_file, *args, **kwargs))
 
         return data
 
