@@ -24,65 +24,81 @@ class Assay(ABC):
 
 
 class LightDarkPreference3wpf(Assay):
+    @property
     def total_arenas(self) -> int:
         return 12
 
+    @property
     def arenas_per_group(self) -> int | None:
         return 4
 
 
 class LightDarkPreference6dpf(Assay):
+    @property
     def total_arenas(self) -> int:
         return 12
 
+    @property
     def arenas_per_group(self) -> int | None:
         return 12
 
 
 class LightDarkTransition(Assay):
+    @property
     def total_arenas(self) -> int:
         return 48
 
+    @property
     def arenas_per_group(self) -> int | None:
         return None
 
 
 class MirrorBiting(Assay):
+    @property
     def total_arenas(self) -> int:
         return 20
 
+    @property
     def arenas_per_group(self) -> int | None:
         return 4
 
 
 class SocialPreference(Assay):
+    @property
     def total_arenas(self) -> int:
         return 10
 
+    @property
     def arenas_per_group(self) -> int | None:
         return 4
 
 
 class StartleResponse(Assay):
+    @property
     def total_arenas(self) -> int:
         return 48
 
+    @property
     def arenas_per_group(self) -> int | None:
         return None
 
 
 class Ymaze15(Assay):
+    @property
     def total_arenas(self) -> int:
         return 15
 
+    @property
     def arenas_per_group(self) -> int | None:
         return 12
 
 
 class Ymaze4(Assay):
+    @property
     def total_arenas(self) -> int:
         return 4
 
+    @property
     def arenas_per_group(self) -> int | None:
         return 4
 
@@ -142,9 +158,11 @@ class ZantiksData:
 
         if use_genotypes:
             with open(zantiks_file.genotypes_path, "r") as f:
-                self.genotypes: pl.DataFrame = pl.read_csv(f).drop_nulls("Cluster")
+                self.genotypes = pl.read_csv(f).drop_nulls("Cluster")
 
             self._attach_genotypes()
+        else:
+            self.genotypes = None
 
     def __repr__(self):
         return "\n" + str(self.genotypes) + "\n" + str(self.data)

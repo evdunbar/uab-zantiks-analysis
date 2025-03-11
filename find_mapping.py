@@ -3,9 +3,8 @@ from typing import Iterable
 
 import alphashape
 import matplotlib.pyplot as plt
-import numpy as np
+import polars as pl
 from numpy.typing import NDArray
-from PIL import Image
 
 import data_utils
 
@@ -19,11 +18,13 @@ class MapFinder:
                 self.data.append(datum)
             else:
                 print(f"{datum} is not position data")
+        self.assay_type = self.data[0].info.assay_type
+        self.arena_data = self._convert_to_arenas()
 
         # constant
-        self.arena_map = (
-            self._load_image("data/social_preference_arenas.bmp").sum(-1) > 10
-        )
+        # self.arena_map = (
+        #     self._load_image("data/social_preference_arenas.bmp").sum(-1) > 10
+        # )
 
         # computed
         # self.min_dfs = [df.min() for df in self.pos_dfs]
@@ -40,10 +41,30 @@ class MapFinder:
         # self.arena_xs = np.concatenate((arena_x_mins, arena_x_maxs))
         # self.arena_ys = np.concatenate((arena_y_mins, arena_y_maxs))
 
-    def _load_image(self, filepath: str) -> NDArray:
-        with open(filepath, "rb") as f:
-            image = np.asarray(Image.open(f))
-        return image
+    # def _load_image(self, filepath: str) -> NDArray:
+    #     with open(filepath, "rb") as f:
+    #         image = np.asarray(Image.open(f))
+    #     return image
+
+    def _convert_to_arenas(self) -> list[NDArray]:
+        arenas = []
+        for arena_idx in range(self.assay_type.total_arenas):
+            # combine all data
+            for i, datum in enumerate(self.data):
+                new_df = (
+                    datum.data.filter(pl.col("ARENA") == arena_idx + 1)
+                    .select("X", "Y")
+                    .drop_nulls()
+                )
+                if i == 0:
+                    df = new_df
+                else:
+                    df = df.vstack(new_df)
+
+            # keep only unique points to speed up calculations
+            arenas.append(df.unique().to_numpy())
+
+        return arenas
 
     def scatter(self, separate: bool):
         if separate:
@@ -59,8 +80,22 @@ class MapFinder:
 
             plt.show()
 
-    def make_shape(self):
-        # shape = alphashape.alphashape()
+    def make_shapes(self):
+        self.shapes = []
+
+        for points in self.arena_data:
+            shape = alphashape.alphashape(points, 1.0)
+            self.shapes.append(shape)
+
+    def show_shapes(self):
+        for shape, points in zip(self.shapes, self.arena_data):
+            fig, ax = plt.subplots()
+            # ax.scatter(points[:, 0], points[:, 1])
+            x, y = shape.exterior.xy
+            ax.fill(x, y, alpha=0.2)
+
+            ax.set_aspect("equal")
+            plt.show()
 
     # def direction_to_numpy(
     #     self, dfs: list[pl.DataFrame], direction: Literal["X", "Y"]
@@ -122,10 +157,9 @@ class MapFinder:
 
 if __name__ == "__main__":
     dl = data_utils.DataLoader().add_by_filter(
-        assay_types=("ymaze_4",), data_type="position"
+        assay_types=("ymaze_15",), data_type="position"
     )
     data = dl.load_all(use_genotypes=False)
-    # for datum in data:
-    #     print(datum.info.path)
     mf = MapFinder(data)
-    mf.make_shape()
+    mf.make_shapes()
+    mf.show_shapes()
