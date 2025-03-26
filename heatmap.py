@@ -2,6 +2,7 @@
 import math
 from typing import Iterable
 
+import cv2
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -20,54 +21,100 @@ class Heatmap:
         self,
         data: data_utils.ZantiksData,
         genotypes: str | Iterable[str],
-        arena_map_path: str,
-        scale_factors: tuple[NDArray],
     ):
         self.info = data.info
         self.xy_data = data.get_genotype(genotypes)
-        arena_map = self._load_image(arena_map_path)
-        self.arena_mask = arena_map.sum(-1) < 10
-        self.x_bias = scale_factors[0][0]
-        self.x_scale = scale_factors[0][1]
-        self.y_bias = scale_factors[1][0]
-        self.y_scale = scale_factors[1][1]
+        self.arena_ids = self.xy_data["ARENA"].unique().sort()
 
-        self.map = np.zeros_like(self.arena_mask, dtype=float)
+        self.arena_map = self._load_image(data.info.assay_type.arena_bmp_path)
+        self.arena_mask = np.zeros(
+            (self.arena_map.shape[0], self.arena_map.shape[1])
+        ).astype(bool)
+        for arena in self.arena_ids:
+            self.arena_mask = self.arena_mask | self.get_arena_coords(arena - 1)
+
+        self.camera_params = self._load_camera_params(
+            data.info.assay_type.camera_parameters_path
+        )
+
+        self.map = np.zeros_like(self.arena_mask).astype(float)
 
     def _load_image(self, filepath: str) -> NDArray:
         with open(filepath, "rb") as f:
             image = np.asarray(Image.open(f))
 
-        return image
+        cleaned_image = np.where(image < 8, 0, image)
+        return cleaned_image
+
+    def _load_camera_params(self, filepath: str):
+        camera_params = {}
+        with open(filepath, "rb") as f:
+            camera_params_file = np.load(f)
+            camera_params["rvec"] = camera_params_file["rvec"]
+            camera_params["tvec"] = camera_params_file["tvec"]
+            camera_params["mtx"] = camera_params_file["mtx"]
+            camera_params["dist"] = camera_params_file["dist"]
+
+        return camera_params
+
+    def _arena_color(self, arena: int) -> NDArray:
+        # fmt: off
+        color_cycle = np.asarray(((120, 120, 248),  # blue
+                                  (120, 248, 120),  # green
+                                  (120, 248, 248),  # cyan
+                                  (248, 120, 120),  # red
+                                  (248, 120, 248),  # pink
+                                  (248, 248, 120))) # yellow
+        # fmt: on
+        num_colors = 6
+        darken_by = 8
+
+        times_to_darken, color = divmod(arena, num_colors)
+        return color_cycle[color] - times_to_darken * darken_by
+
+    def get_arena_coords(self, arena: int) -> NDArray[bool]:
+        return np.all(self.arena_map == self._arena_color(arena), axis=-1)
 
     def make_map(self, *, by_arena: bool = False, show: bool = False):
-        for arena_id in self.xy_data["ARENA"].unique().sort():
-            arena = np.nan_to_num(
+        for arena_id in self.arena_ids:
+            dirty_arena_points = (
                 self.xy_data.filter(pl.col("ARENA") == arena_id)
                 .select("X", "Y")
                 .to_numpy()
                 .astype(float)
             )
-            self._process_arena(arena)
+            dirty_3d_points = np.column_stack(
+                (dirty_arena_points, np.zeros(dirty_arena_points.shape[0]))
+            ).astype(np.float32)
+            arena_points = np.nan_to_num(
+                np.squeeze(
+                    cv2.projectPoints(
+                        dirty_3d_points,
+                        self.camera_params["rvec"],
+                        self.camera_params["tvec"],
+                        self.camera_params["mtx"],
+                        self.camera_params["dist"],
+                    )[0]  # first value is the points
+                )
+            )
+            self._process_arena(arena_points)
 
         if show:
             self.show_map()
 
     def _process_arena(self, arena_data: NDArray) -> NDArray:
         for x, y in arena_data:
-            if x <= 0.0 and y <= 0.0:
+            if x <= 0.0 and y <= 0.0 or x > self.map.shape[1] or y > self.map.shape[0]:
                 continue
-            scaled_x = math.floor(x * self.x_scale + self.x_bias)
-            scaled_y = math.floor(y * self.y_scale + self.y_bias)
+            scaled_x = math.floor(x)
+            scaled_y = math.floor(y)
             self.map[scaled_y, scaled_x] += 1
 
         return self.map
 
     def show_map(self, sum_radius: float = 10) -> None:
-        masked_plot = np.ma.masked_array(
-            self.map, mask=np.bitwise_invert(self.arena_mask)
-        )
-        masked_plot[self.arena_mask] = 0.0
+        masked_plot = np.ma.masked_array(self.map, mask=self.arena_mask)
+        # masked_plot[np.logical_not(self.arena_mask)] = 0.0
         plot_buffer = self.map.copy()
         plot_buffer = ndimage.gaussian_filter(plot_buffer, sum_radius)
 
@@ -101,25 +148,9 @@ class Heatmap:
 
 
 if __name__ == "__main__":
-    import find_mapping
-
     dataloader = data_utils.DataLoader().add_by_filter(
-        assay_types=("social_preference",), data_type="position"
+        assay_types=("ymaze_4",), data_type="position"
     )
     all_zantiks_data = dataloader.load_all()
-    mapping_finder = find_mapping.MapFinder(
-        [zantiks_data.info.path for zantiks_data in all_zantiks_data]
-    )
-    mapping_finder.find_mappings()
-    scale_factors = mapping_finder.mappings
-
     for zantiks_data in all_zantiks_data:
-        Heatmap(
-            zantiks_data,
-            (
-                "WT",
-                "HOM",
-            ),
-            "data/social_preference_arenas.bmp",
-            scale_factors,
-        ).make_map(by_arena=True, show=True)
+        Heatmap(zantiks_data, ("WT", "HOM")).make_map(by_arena=True, show=True)
