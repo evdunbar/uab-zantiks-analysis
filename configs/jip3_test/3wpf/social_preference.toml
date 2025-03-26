@@ -10,9 +10,17 @@ files = [
     "2025/02/06/social_preference/ab/social_preference-20250206T142907.csv",
     "2025/02/06/social_preference/cd/social_preference-20250206T115440.csv",
     "2025/02/18/social_preference/ab/social_preference-20250218T142028.csv",
-    "2025/02/18/social_preference/cd/social_preference-20250218T115000.csv"
+    "2025/02/18/social_preference/cd/social_preference-20250218T115000.csv",
+    "2025/03/21/social_preference/a/social_preference-20250321T104149.csv",
+    "2025/03/21/social_preference/b/social_preference-20250321T131542.csv",
+    "2025/03/21/social_preference/c/social_preference-20250321T123035.csv",
+    "2025/03/21/social_preference/d/social_preference-20250321T141200.csv"
 ]
 assay_names = [
+    "social preference",
+    "social preference",
+    "social preference",
+    "social preference",
     "social preference",
     "social preference",
     "social preference",
@@ -27,8 +35,38 @@ assay_names = [
 
 [genotypes]
 files_prefix = "data/"
-files = ["2024/12/06/genotypes.csv", "2024/12/06/genotypes.csv", "2024/12/18/genotypes.csv", "2024/12/18/genotypes.csv", "2025/02/04/genotypes.csv", "2025/02/04/genotypes.csv", "2025/02/06/genotypes.csv", "2025/02/06/genotypes.csv", "2025/02/18/genotypes.csv", "2025/02/18/genotypes.csv"]
-counting_directions = ["across", "across", "across", "across", "across", "across", "across", "across", "across", "across"]
+files = [
+    "2024/12/06/genotypes.csv",
+    "2024/12/06/genotypes.csv",
+    "2024/12/18/genotypes.csv",
+    "2024/12/18/genotypes.csv",
+    "2025/02/04/genotypes.csv",
+    "2025/02/04/genotypes.csv",
+    "2025/02/06/genotypes.csv",
+    "2025/02/06/genotypes.csv",
+    "2025/02/18/genotypes.csv",
+    "2025/02/18/genotypes.csv",
+    "2025/03/21/genotypes.csv",
+    "2025/03/21/genotypes.csv",
+    "2025/03/21/genotypes.csv",
+    "2025/03/21/genotypes.csv"
+]
+counting_directions = [
+    "across",
+    "across",
+    "across",
+    "across",
+    "across",
+    "across",
+    "across",
+    "across",
+    "across",
+    "across",
+    "down",
+    "down",
+    "down",
+    "down"
+]
 
 [fish_used]
 files_prefix = ""
@@ -42,5 +80,9 @@ files = [
     "templates/fish_used/eight_1.txt",
     "templates/fish_used/eight_2.txt",
     "templates/fish_used/eight_1.txt",
-    "templates/fish_used/eight_2.txt"
+    "templates/fish_used/eight_2.txt",
+    "data/2025/03/21/social_preference/a/fish_used.txt",
+    "data/2025/03/21/social_preference/b/fish_used.txt",
+    "data/2025/03/21/social_preference/c/fish_used.txt",
+    "data/2025/03/21/social_preference/d/fish_used.txt"
 ]

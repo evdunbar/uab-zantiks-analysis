@@ -207,7 +207,9 @@ class ZantiksFile:
         parts = path.split("/")
         self.filename = parts[-1]
         filename_parts = self.filename.split("-")
-        self.basename = filename_parts[0] + "-" + filename_parts[1][:14]
+        self.basename = (
+            parts[-2] + "/" + filename_parts[0] + "-" + filename_parts[1][:13]
+        )
         self.groups = self._parse_groups(parts[-2])
         self.assay_type: Assay = self.assay_types[filename_parts[0]]()
         self.year = filename_parts[1][:4]
@@ -476,7 +478,7 @@ class DataLoader:
 
 if __name__ == "__main__":
     dl = DataLoader().add_by_filter(
-        assay_types=("light_dark_transition",), data_type="position"
+        assay_types=("social_preference",), data_type="position"
     )
     dfs = dl.load_all()
     for df in dfs:
