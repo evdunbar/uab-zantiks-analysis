@@ -1,5 +1,5 @@
 [data]
-files_prefix = "2024/"
+files_prefix = "data/2024/"
 files = [
     "11/01/ymaze_15/a/ymaze_15-20241101T164208.csv",
     "11/01/ymaze_15/b/ymaze_15-20241101T175733.csv",
@@ -26,7 +26,7 @@ assay_names = [
 ]
 
 [genotypes]
-files_prefix = "2024/"
+files_prefix = "data/2024/"
 files = [
     "11/01/genotypes.csv",
     "11/01/genotypes.csv",
@@ -53,7 +53,7 @@ counting_directions = [
 ]
 
 [fish_used]
-files_prefix = "2024/"
+files_prefix = "data/2024/"
 files = [
     "11/01/ymaze_15/a/fish_used.txt",
     "11/01/ymaze_15/b/fish_used.txt",

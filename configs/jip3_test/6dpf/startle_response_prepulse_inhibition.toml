@@ -1,5 +1,5 @@
 [data]
-files_prefix = ""
+files_prefix = "data/"
 files = [
     "2024/12/09/zantiks_a/startle_response-20241209T105820.csv",
     "2024/12/09/zantiks_b/startle_response-20241209T105839.csv",
@@ -8,7 +8,7 @@ files = [
 assay_names = ["startle response/pre-pulse inhibition", "startle response/pre-pulse inhibition", "startle response/pre-pulse inhibition"]
 
 [genotypes]
-files_prefix = ""
+files_prefix = "data/"
 files = ["2024/12/09/genotypes.csv", "2024/12/09/genotypes.csv", "2025/01/13/genotypes.csv"]
 counting_directions = ["down", "down", "down"]
 

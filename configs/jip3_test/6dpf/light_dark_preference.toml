@@ -1,5 +1,5 @@
 [data]
-files_prefix = ""
+files_prefix = "data/"
 files = [
     "2024/12/09/light_dark_preference/a/light_dark_preference-20241209T121344.csv",
     "2024/12/09/light_dark_preference/b/light_dark_preference-20241209T130731.csv",
@@ -11,7 +11,7 @@ files = [
 assay_names = ["light/dark preference", "light/dark preference", "light/dark preference", "light/dark preference", "light/dark preference", "light/dark preference"]
 
 [genotypes]
-files_prefix = ""
+files_prefix = "data/"
 files = ["2024/12/09/genotypes.csv", "2024/12/09/genotypes.csv", "2024/12/09/genotypes.csv", "2025/01/13/genotypes.csv", "2025/01/13/genotypes.csv", "2025/01/13/genotypes.csv"]
 counting_directions = ["across", "across", "across", "across", "across", "across"]
 
