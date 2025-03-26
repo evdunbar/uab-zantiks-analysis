@@ -112,7 +112,7 @@ class Heatmap:
 
     def show_map(self, sum_radius: float = 10) -> None:
         masked_plot = np.ma.masked_array(self.map, mask=self.arena_mask)
-        # masked_plot[np.logical_not(self.arena_mask)] = 0.0
+        masked_plot[np.logical_not(self.arena_mask)] = 0.0
         plot_buffer = self.map.copy()
         plot_buffer = ndimage.gaussian_filter(plot_buffer, sum_radius)
 
@@ -147,7 +147,7 @@ class Heatmap:
 
 if __name__ == "__main__":
     dataloader = data_utils.DataLoader().add_by_filter(
-        assay_types=("ymaze_4",), data_type="position"
+        assay_types=("social_preference",), data_type="position"
     )
     all_zantiks_data = dataloader.load_all()
     for zantiks_data in all_zantiks_data:
