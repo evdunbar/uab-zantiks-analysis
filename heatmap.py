@@ -106,9 +106,7 @@ class Heatmap:
         for x, y in arena_data:
             if x <= 0.0 and y <= 0.0 or x > self.map.shape[1] or y > self.map.shape[0]:
                 continue
-            scaled_x = math.floor(x)
-            scaled_y = math.floor(y)
-            self.map[scaled_y, scaled_x] += 1
+            self.map[math.floor(y), math.floor(x)] += 1
 
         return self.map
 
