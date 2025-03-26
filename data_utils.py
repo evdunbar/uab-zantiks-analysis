@@ -3,15 +3,31 @@
 import glob
 import io
 import re
+import tomllib
 from abc import ABC, abstractmethod
 from typing import Iterable, Literal, Self, Sequence
 
+import numpy as np
 import polars as pl
 
 type VariableDate = Sequence[int, int | None, int | None]
 
 
 class Assay(ABC):
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        pass
+
+    @property
+    @abstractmethod
+    def age(self) -> str:
+        pass
+
+    @property
+    def config_path(self) -> str:
+        return f"configs/jip3_test/{self.age}/{self.name}.toml"
+
     @property
     @abstractmethod
     def total_arenas(self) -> int:
@@ -22,8 +38,24 @@ class Assay(ABC):
     def arenas_per_group(self) -> int | None:
         pass
 
+    @property
+    def arena_bmp_path(self) -> str:
+        return f"data/arenas/{self.name}_arenas.bmp"
+
+    @property
+    def camera_parameters_path(self) -> str:
+        return f"data/camera_params/{self.name}.npz"
+
 
 class LightDarkPreference3wpf(Assay):
+    @property
+    def name(self) -> str:
+        return "light_dark_preference"
+
+    @property
+    def age(self) -> str:
+        return "3wpf"
+
     @property
     def total_arenas(self) -> int:
         return 12
@@ -35,6 +67,14 @@ class LightDarkPreference3wpf(Assay):
 
 class LightDarkPreference6dpf(Assay):
     @property
+    def name(self) -> str:
+        return "light_dark_preference"
+
+    @property
+    def age(self) -> str:
+        return "6dpf"
+
+    @property
     def total_arenas(self) -> int:
         return 12
 
@@ -44,6 +84,14 @@ class LightDarkPreference6dpf(Assay):
 
 
 class LightDarkTransition(Assay):
+    @property
+    def name(self) -> str:
+        return "light_dark_transition"
+
+    @property
+    def age(self) -> str:
+        return "6dpf"
+
     @property
     def total_arenas(self) -> int:
         return 48
@@ -55,6 +103,14 @@ class LightDarkTransition(Assay):
 
 class MirrorBiting(Assay):
     @property
+    def name(self) -> str:
+        return "mirror_biting"
+
+    @property
+    def age(self) -> str:
+        return "3wpf"
+
+    @property
     def total_arenas(self) -> int:
         return 20
 
@@ -64,6 +120,14 @@ class MirrorBiting(Assay):
 
 
 class SocialPreference(Assay):
+    @property
+    def name(self) -> str:
+        return "social_preference"
+
+    @property
+    def age(self) -> str:
+        return "3wpf"
+
     @property
     def total_arenas(self) -> int:
         return 10
@@ -75,6 +139,14 @@ class SocialPreference(Assay):
 
 class StartleResponse(Assay):
     @property
+    def name(self) -> str:
+        return "startle_response"
+
+    @property
+    def age(self) -> str:
+        return "6dpf"
+
+    @property
     def total_arenas(self) -> int:
         return 48
 
@@ -85,6 +157,14 @@ class StartleResponse(Assay):
 
 class Ymaze15(Assay):
     @property
+    def name(self) -> str:
+        return "ymaze_15"
+
+    @property
+    def age(self) -> str:
+        return "6dpf"
+
+    @property
     def total_arenas(self) -> int:
         return 15
 
@@ -94,6 +174,14 @@ class Ymaze15(Assay):
 
 
 class Ymaze4(Assay):
+    @property
+    def name(self) -> str:
+        return "ymaze_4"
+
+    @property
+    def age(self) -> str:
+        return "3wpf"
+
     @property
     def total_arenas(self) -> int:
         return 4
@@ -119,14 +207,15 @@ class ZantiksFile:
         parts = path.split("/")
         self.filename = parts[-1]
         filename_parts = self.filename.split("-")
+        self.basename = filename_parts[0] + "-" + filename_parts[1][:14]
         self.groups = self._parse_groups(parts[-2])
-        self.assay_type = self.assay_types[filename_parts[0]]()
-        self.genotypes_path = self._find_run_day_path() + "/genotypes.csv"
+        self.assay_type: Assay = self.assay_types[filename_parts[0]]()
         self.year = filename_parts[1][:4]
         self.month = filename_parts[1][4:6]
         self.day = filename_parts[1][6:8]
 
         self.is_xy = "xy" in self.filename or "XY" in self.filename
+        self._parse_config()
 
     def __repr__(self):
         return f"ZantiksFile({self.year}, {self.month}, {self.day}, {self.assay_type}, {self.groups}, {self.filename}) - is_xy: {self.is_xy}"
@@ -137,9 +226,20 @@ class ZantiksFile:
         else:
             return tuple(groups.upper())
 
-    def _find_run_day_path(self):
-        date_folders_expression = re.compile(r".*\d{4}/\d{2}/\d{2}/")
-        return date_folders_expression.search(self.path)[0]
+    def _parse_config(self):
+        with open(self.assay_type.config_path, "rb") as f:
+            config = tomllib.load(f)
+
+        file_idx = tuple(
+            map(lambda s: self.basename in s, config["data"]["files"])
+        ).index(True)
+        self.genotypes_path = (
+            config["genotypes"]["files_prefix"] + config["genotypes"]["files"][file_idx]
+        )
+        self.counting_direction = config["genotypes"]["counting_directions"][file_idx]
+        self.fish_used_path = (
+            config["fish_used"]["files_prefix"] + config["fish_used"]["files"][file_idx]
+        )
 
 
 class ZantiksData:
@@ -157,10 +257,8 @@ class ZantiksData:
             self.data = self._expand_zones_and_arenas(data)
 
         if use_genotypes:
-            with open(zantiks_file.genotypes_path, "r") as f:
-                self.genotypes = pl.read_csv(f).drop_nulls("Cluster")
-
             self._attach_genotypes()
+            self.genotypes = True
         else:
             self.genotypes = None
 
@@ -247,29 +345,54 @@ class ZantiksData:
         return result
 
     def _attach_genotypes(self) -> None:
-        if "A" in self.info.groups:
-            genotype_mapping = self.genotypes.select("Cluster").with_row_index(offset=1)
-        elif self.info.groups == ("B",):
-            genotype_mapping = self.genotypes.select(
-                (pl.int_range(pl.len(), dtype=pl.Int32) - 2).alias("index"), "Cluster"
-            )
-        elif self.info.groups == ("C", "D"):
-            genotype_length = len(self.genotypes["Cluster"])
-            genotype_mapping = self.genotypes.select(
-                (
-                    pl.int_range(pl.len(), dtype=pl.Int32) - (genotype_length // 2) + 1
-                ).alias("index"),
-                "Cluster",
-            )
+        # fish used data
+        with open(self.info.fish_used_path, "r") as f:
+            fish_used_data = f.readlines()
+        fish_used_data = np.asarray([line.split() for line in fish_used_data])
+        label_matrix = np.asarray(
+            [
+                "".join((letter, number))
+                for letter in ("A", "B", "C", "D", "E", "F", "G", "H")
+                for number in (
+                    "01",
+                    "02",
+                    "03",
+                    "04",
+                    "05",
+                    "06",
+                    "07",
+                    "08",
+                    "09",
+                    "10",
+                    "11",
+                    "12",
+                )
+            ]
+        ).reshape((8, 12))
+        wells_used = label_matrix[(fish_used_data == "x") | (fish_used_data == "X")]
+
+        # genotype data
+        with open(self.info.genotypes_path, "r") as f:
+            genotype_data = pl.read_csv(f, columns=("Well", "Cluster"))
+        genotype_data = genotype_data.with_columns(
+            pl.col("Well").str.extract(r"([A-H])").alias("row"),
+            pl.col("Well").str.extract(r"([0-9]+)").cast(int).alias("column"),
+        )
+        genotype_data = genotype_data.filter(pl.col("Well").is_in(wells_used))
+        if self.info.counting_direction == "across":
+            genotype_data = genotype_data.sort("row", "column")
         else:
-            raise ValueError(
-                f"Zantiks data groups not understood. File: {self.info.path}, Groups: {self.info.groups}."
-            )
+            genotype_data = genotype_data.sort("column", "row")
+
+        genotype_data = genotype_data.with_row_index().select("index", "Cluster")
         self.data = self.data.join(
-            genotype_mapping, left_on="ARENA", right_on="index", maintain_order="left"
+            genotype_data, left_on="ARENA", right_on="index", maintain_order="left"
         )
 
     def get_genotype(self, genotype: str | Iterable[str]) -> pl.DataFrame:
+        if not self.genotypes:
+            self._attach_genotypes()
+
         if genotype is str:
             genotype = (genotype,)
 
@@ -357,5 +480,4 @@ if __name__ == "__main__":
     )
     dfs = dl.load_all()
     for df in dfs:
-        print(df.info)
-        # print(df.get_genotype(("WT", "HOM")))
+        print(df.get_genotype(("WT", "HOM")))
