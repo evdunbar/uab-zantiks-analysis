@@ -119,8 +119,8 @@ class Heatmap:
         plot_title = f"\\textbf{{{self.info.assay_type.pretty_name}}}"
         save_title = self.info.assay_type.name
         if self.info.groups is not None:
-            plot_title += f" \\textit{{Group(s) {self.info.groups}}}"
-            save_title += f"_{"".join(self.info.groups)}"
+            plot_title += f" \\textit{{{self._format_groups()}}}"
+            save_title += f"_{''.join(self.info.groups)}"
         if self.info.day is not None:
             plot_title += f" {self.info.month}-{self.info.day}-{self.info.year}"
             save_title += f"_{self.info.month}-{self.info.day}-{self.info.year}"
@@ -144,11 +144,31 @@ class Heatmap:
         )
         plt.show()
 
+    def _format_groups(self) -> str | None:
+        if not self.info.groups:
+            return None
+        else:
+            if len(self.info.groups) == 1:
+                return f"Group {self.info.groups[0]}"
+            elif len(self.info.groups) == 2:
+                return f"Groups {r' \& '.join(self.info.groups)}"
+            else:
+                return f"Groups {', '.join(self.info.groups)}"
+
 
 if __name__ == "__main__":
+    # fmt: off
     dataloader = data_utils.DataLoader().add_by_filter(
+        # assay_types=("light_dark_preference_3wpf",), data_type="position"
+        # assay_types=("light_dark_preference_6dpf",), data_type="position"
+        # assay_types=("light_dark_transition",), data_type="position"
+        # assay_types=("mirror_biting",), data_type="position"
+        # assay_types=("social_preference",), data_type="position"
+        # assay_types=("startle_response",), data_type="position"
+        # assay_types=("ymaze_15",), data_type="position"
         assay_types=("ymaze_4",), data_type="position"
     )
+    # fmt: on
     all_zantiks_data = dataloader.load_all()
     for zantiks_data in all_zantiks_data:
         Heatmap(zantiks_data, ("WT", "HOM", "HET")).make_map(by_arena=True, show=True)
