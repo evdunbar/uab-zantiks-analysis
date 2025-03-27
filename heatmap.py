@@ -116,11 +116,11 @@ class Heatmap:
         plot_buffer = self.map.copy()
         plot_buffer = ndimage.gaussian_filter(plot_buffer, sum_radius)
 
-        plot_title = r"\textbf{Social Preference}"
-        save_title = "social_preference"
+        plot_title = f"\\textbf{{{self.info.assay_type.pretty_name}}}"
+        save_title = self.info.assay_type.name
         if self.info.groups is not None:
             plot_title += f" \\textit{{Group(s) {self.info.groups}}}"
-            save_title += f"_{self.info.groups}"
+            save_title += f"_{"".join(self.info.groups)}"
         if self.info.day is not None:
             plot_title += f" {self.info.month}-{self.info.day}-{self.info.year}"
             save_title += f"_{self.info.month}-{self.info.day}-{self.info.year}"
@@ -147,8 +147,8 @@ class Heatmap:
 
 if __name__ == "__main__":
     dataloader = data_utils.DataLoader().add_by_filter(
-        assay_types=("social_preference",), data_type="position"
+        assay_types=("ymaze_4",), data_type="position"
     )
     all_zantiks_data = dataloader.load_all()
     for zantiks_data in all_zantiks_data:
-        Heatmap(zantiks_data, ("WT", "HOM")).make_map(by_arena=True, show=True)
+        Heatmap(zantiks_data, ("WT", "HOM", "HET")).make_map(by_arena=True, show=True)

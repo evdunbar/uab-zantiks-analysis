@@ -155,7 +155,7 @@ def _(Image, NDArray, np, os):
             image = np.asarray(Image.open(f))
 
         # images have weird signature in top left
-        # no color channels have intensity less than 10
+        # no color channels have intensity less than 8
         cleaned_image = np.where(image < 8, 0, image)
 
         return cleaned_image
@@ -211,6 +211,7 @@ def _(MapFinder, assay_picker, data_utils):
     scatter_plot = mf.scatter(separate=False, return_plots=True)
     scatter_plot.set_title("All Data")
     scatter_plot.invert_yaxis()
+    scatter_plot.set_aspect("equal")
     scatter_plot
     return bad_directions, data, dl, mf, scatter_plot
 
@@ -237,6 +238,12 @@ def _(NDArray, math, mf, ndimage, np, plt):
         bins -= np.min(bins)
         return bins
 
+    def points_in_bin(data: NDArray, binned_data: NDArray, scale: float) -> NDArray:
+        in_bin = np.zeros(data.shape[0]).astype(bool)
+        for i, (x, y) in enumerate(data):
+            in_bin[i] = binned_data[math.floor(y * scale), math.floor(x * scale)] > 0
+        return in_bin 
+
     size = 2.5
     binned = bin_data(mf.arena_data, size)
     binned_padded = bin_data(mf.arena_data, size, pad=True)
@@ -245,7 +252,7 @@ def _(NDArray, math, mf, ndimage, np, plt):
     plt.imshow(binned, cmap="binary")
     plt.title(f"Low-Pass Filtered Binned Data\n{size=}")
     plt.gca()
-    return bin_data, binned, binned_padded, size
+    return bin_data, binned, binned_padded, points_in_bin, size
 
 
 @app.cell
@@ -298,10 +305,13 @@ def _(
     NDArray,
     assay_picker,
     bad_directions,
+    binned,
     cv2,
     get_arena,
     mf,
     np,
+    points_in_bin,
+    size,
     tracking_arenas,
     used_arena_idx,
 ):
@@ -338,7 +348,8 @@ def _(
 
     for i, j in enumerate(used_arena_idx):
         # points from real data
-        arena_points = mf.arena_data[j]
+        all_arena_points = mf.arena_data[j]
+        arena_points = all_arena_points[points_in_bin(all_arena_points, binned, size)]
         collected_cardinals = get_cardinals(arena_points, leave_out=bad_directions)
         # points from zantiks assets
         asset_arena_points = np.flip(np.argwhere(get_arena(tracking_arenas, j)))
@@ -357,6 +368,7 @@ def _(
     np.savez_compressed(f"data/camera_params/{assay_picker.value}", mtx=mtx, dist=dist, rvec=rvecs[0], tvec=tvecs[0])
     print(ret, mtx, dist, rvecs, tvecs)
     return (
+        all_arena_points,
         all_asset_cardinals,
         all_real_cardinals,
         arena_points,

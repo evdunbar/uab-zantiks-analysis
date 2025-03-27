@@ -21,6 +21,11 @@ class Assay(ABC):
 
     @property
     @abstractmethod
+    def pretty_name(self) -> str:
+        pass
+
+    @property
+    @abstractmethod
     def age(self) -> str:
         pass
 
@@ -53,6 +58,10 @@ class LightDarkPreference3wpf(Assay):
         return "light_dark_preference_3wpf"
 
     @property
+    def pretty_name(self) -> str:
+        return "Light/Dark Preference 3wpf"
+
+    @property
     def age(self) -> str:
         return "3wpf"
 
@@ -69,6 +78,10 @@ class LightDarkPreference6dpf(Assay):
     @property
     def name(self) -> str:
         return "light_dark_preference_6dpf"
+
+    @property
+    def pretty_name(self) -> str:
+        return "Light/Dark Preference 6dpf"
 
     @property
     def age(self) -> str:
@@ -89,6 +102,10 @@ class LightDarkTransition(Assay):
         return "light_dark_transition"
 
     @property
+    def pretty_name(self) -> str:
+        return "Light/Dark Transition"
+
+    @property
     def age(self) -> str:
         return "6dpf"
 
@@ -105,6 +122,10 @@ class MirrorBiting(Assay):
     @property
     def name(self) -> str:
         return "mirror_biting"
+
+    @property
+    def pretty_name(self) -> str:
+        return "Mirror Biting"
 
     @property
     def age(self) -> str:
@@ -125,6 +146,10 @@ class SocialPreference(Assay):
         return "social_preference"
 
     @property
+    def pretty_name(self) -> str:
+        return "Social Preference"
+
+    @property
     def age(self) -> str:
         return "3wpf"
 
@@ -141,6 +166,10 @@ class StartleResponse(Assay):
     @property
     def name(self) -> str:
         return "startle_response"
+
+    @property
+    def pretty_name(self) -> str:
+        return "Startle Response + Pre-pulse Inhibition"
 
     @property
     def age(self) -> str:
@@ -161,6 +190,10 @@ class Ymaze15(Assay):
         return "ymaze_15"
 
     @property
+    def pretty_name(self) -> str:
+        return "Y-maze 15"
+
+    @property
     def age(self) -> str:
         return "6dpf"
 
@@ -177,6 +210,10 @@ class Ymaze4(Assay):
     @property
     def name(self) -> str:
         return "ymaze_4"
+
+    @property
+    def pretty_name(self) -> str:
+        return "Y-maze 4"
 
     @property
     def age(self) -> str:
@@ -212,6 +249,8 @@ class ZantiksFile:
             parts[-2] + "/" + filename_parts[0] + "-" + filename_parts[1][:12]
         )
         self.groups = self._parse_groups(parts[-2])
+        if not all(char in {"A", "B", "C", "D"} for char in self.groups):
+            self.groups = None
         self.assay_type: Assay = self.assay_types[filename_parts[0]]()
         self.year = filename_parts[1][:4]
         self.month = filename_parts[1][4:6]
@@ -387,7 +426,9 @@ class ZantiksData:
         else:
             genotype_data = genotype_data.sort("column", "row")
 
-        genotype_data = genotype_data.with_row_index().select("index", "Cluster")
+        genotype_data = genotype_data.with_row_index(offset=1).select(
+            "index", "Cluster"
+        )
         self.data = self.data.join(
             genotype_data, left_on="ARENA", right_on="index", maintain_order="left"
         )
