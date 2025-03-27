@@ -38,10 +38,11 @@ def _():
 
 @app.cell
 def _(mo):
-    assay_types = ("light_dark_preference", "light_dark_transition", "mirror_biting", "social_preference", "startle_response", "ymaze_4", "ymaze_15")
+    assay_types = ("light_dark_preference_3wpf", "light_dark_preference_6dpf", "light_dark_transition", "mirror_biting", "social_preference", "startle_response", "ymaze_4", "ymaze_15")
+    assay_picker_title = mo.md("## Pick an assay type to visualize.")
     assay_picker = mo.ui.radio(assay_types)
-    assay_picker
-    return assay_picker, assay_types
+    mo.vstack((assay_picker_title, assay_picker))
+    return assay_picker, assay_picker_title, assay_types
 
 
 @app.cell
@@ -103,19 +104,30 @@ def _(Iterable, NDArray, alphashape, data_utils, pl, plt):
 
             return arenas
 
-        def scatter(self, separate: bool):
+        def scatter(self, separate: bool, return_plots: bool = False):
             if separate:
+                if return_plots:
+                    plots = []
                 for datum in self.data:
                     plt.figure(dpi=200)
                     plt.title(datum.info.path)
                     plt.scatter(datum.data["X"], datum.data["Y"], s=0.5)
-                    plt.show()
+                    if return_plots:
+                        plots.append(plt.gca())
+                    else:
+                        plt.show()
+
+                if return_plots:
+                    return plots
             else:
                 plt.figure(dpi=200)
                 for datum in self.data:
                     plt.scatter(datum.data["X"], datum.data["Y"], s=0.5)
 
-                plt.show()
+                if return_plots:
+                    return plt.gca()
+                else:
+                    plt.show()
 
         def make_shapes(self):
             self.shapes = []
@@ -175,14 +187,9 @@ def _(Image, NDArray, np, os):
 
 @app.cell
 def _(MapFinder, assay_picker, data_utils):
-    dl = data_utils.DataLoader().add_by_filter(
-        assay_types=(assay_picker.value,), data_type="position"
-    )
-    data = dl.load_all(use_genotypes=False)
-    mf = MapFinder(data)
-    mf.scatter(separate=False)
-
-    if assay_picker.value == "light_dark_preference":
+    if assay_picker.value == "light_dark_preference_3wpf":
+        bad_directions = None
+    elif assay_picker.value == "light_dark_preference_6dpf":
         bad_directions = None
     elif assay_picker.value == "light_dark_transition":
         bad_directions = None
@@ -196,7 +203,16 @@ def _(MapFinder, assay_picker, data_utils):
         bad_directions = ("N", "S")
     elif assay_picker.value == "ymaze_15":
         bad_directions = ("N", "S")
-    return bad_directions, data, dl, mf
+    dl = data_utils.DataLoader().add_by_filter(
+        assay_types=(assay_picker.value,), data_type="position"
+    )
+    data = dl.load_all(use_genotypes=False)
+    mf = MapFinder(data)
+    scatter_plot = mf.scatter(separate=False, return_plots=True)
+    scatter_plot.set_title("All Data")
+    scatter_plot.invert_yaxis()
+    scatter_plot
+    return bad_directions, data, dl, mf, scatter_plot
 
 
 @app.cell
@@ -227,8 +243,8 @@ def _(NDArray, math, mf, ndimage, np, plt):
 
     plt.figure(dpi=300)
     plt.imshow(binned, cmap="binary")
-    plt.colorbar()
-    plt.show()
+    plt.title(f"Low-Pass Filtered Binned Data\n{size=}")
+    plt.gca()
     return bin_data, binned, binned_padded, size
 
 
@@ -262,7 +278,9 @@ def _(
     plt.figure(dpi=300)
     plt.imshow(used_arenas, alpha=0.5, cmap="binary")
     plt.imshow(upsized_binned, alpha=0.5)
-    plt.show()
+    plt.title("Arenas Detected")
+    plt.axis("off")
+    plt.gca()
     return (
         arena_idx,
         resized_tracking_arena,
@@ -315,7 +333,7 @@ def _(
             else:
                 pass
             cardinals[i] = data[idx]
- 
+
         return cardinals
 
     for i, j in enumerate(used_arena_idx):
@@ -359,13 +377,28 @@ def _(
 
 
 @app.cell
-def _(all_asset_cardinals, cv2, dist, mtx, np, obj_points, plt, rvecs, tvecs):
+def _(
+    all_asset_cardinals,
+    cv2,
+    dist,
+    mtx,
+    np,
+    obj_points,
+    plt,
+    rvecs,
+    tvecs,
+    used_arenas,
+):
     out_points, _ = cv2.projectPoints(obj_points[0], rvecs[0], tvecs[0], mtx, dist)
     trans_points = np.squeeze(out_points)
     plt.figure(dpi=300)
-    plt.scatter(all_asset_cardinals[:, 0], all_asset_cardinals[:, 1])
-    plt.scatter(trans_points[:, 0], trans_points[:, 1])
-    plt.show()
+    plt.scatter(all_asset_cardinals[:, 0], all_asset_cardinals[:, 1], alpha=0.75, label="Points from Arena Maps")
+    plt.scatter(trans_points[:, 0], trans_points[:, 1], alpha=0.75, label="Reprojected Collected Data")
+    plt.axis("off")
+    plt.imshow(used_arenas, cmap="binary")
+    plt.title("Final Projection")
+    plt.legend()
+    plt.gca()
     return out_points, trans_points
 
 

@@ -1,0 +1,43 @@
+[data]
+files_prefix = "data/"
+files = [
+    "2024/12/06/light_dark_preference_3wpf/light_dark_preference_3wpf-20241206T133512.csv",
+    "2024/12/18/light_dark_preference_3wpf/ab/light_dark_preference_3wpf-20241218T134048.csv",
+    "2024/12/18/light_dark_preference_3wpf/cd/light_dark_preference_3wpf-20241218T105417.csv",
+    "2025/02/04/light_dark_preference_3wpf/ab/light_dark_preference_3wpf-20250204T134938.csv",
+    "2025/02/04/light_dark_preference_3wpf/cd/light_dark_preference_3wpf-20250204T110814.csv",
+    "2025/02/06/light_dark_preference_3wpf/ab/light_dark_preference_3wpf-20250206T134253.csv",
+    "2025/02/06/light_dark_preference_3wpf/cd/light_dark_preference_3wpf-20250206T110720.csv",
+    "2025/02/18/light_dark_preference_3wpf/ab/light_dark_preference_3wpf-20250218T133837.csv",
+    "2025/02/18/light_dark_preference_3wpf/cd/light_dark_preference_3wpf-20250218T111017.csv"
+]
+assay_names = [
+    "light/dark preference 3wpf",
+    "light/dark preference 3wpf",
+    "light/dark preference 3wpf",
+    "light/dark preference 3wpf",
+    "light/dark preference 3wpf",
+    "light/dark preference 3wpf",
+    "light/dark preference 3wpf",
+    "light/dark preference 3wpf",
+    "light/dark preference 3wpf"
+]
+
+[genotypes]
+files_prefix = "data/"
+files = ["2024/12/06/genotypes.csv", "2024/12/18/genotypes.csv", "2024/12/18/genotypes.csv", "2025/02/04/genotypes.csv", "2025/02/04/genotypes.csv", "2025/02/06/genotypes.csv", "2025/02/06/genotypes.csv", "2025/02/18/genotypes.csv", "2025/02/18/genotypes.csv"]
+counting_directions = ["across", "across", "across", "across", "across", "across", "across", "across", "across"]
+
+[fish_used]
+files_prefix = ""
+files = [
+    "data/2024/12/06/light_dark_preference_3wpf/fish_used.txt",
+    "data/2024/12/18/light_dark_preference_3wpf/ab/fish_used.txt",
+    "data/2024/12/18/light_dark_preference_3wpf/cd/fish_used.txt",
+    "data/2025/02/04/eight_1.txt",
+    "data/2025/02/04/eight_2.txt",
+    "templates/fish_used/eight_1.txt",
+    "templates/fish_used/eight_2.txt",
+    "templates/fish_used/eight_1.txt",
+    "templates/fish_used/eight_2.txt"
+]

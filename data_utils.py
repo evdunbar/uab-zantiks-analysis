@@ -50,7 +50,7 @@ class Assay(ABC):
 class LightDarkPreference3wpf(Assay):
     @property
     def name(self) -> str:
-        return "light_dark_preference"
+        return "light_dark_preference_3wpf"
 
     @property
     def age(self) -> str:
@@ -68,7 +68,7 @@ class LightDarkPreference3wpf(Assay):
 class LightDarkPreference6dpf(Assay):
     @property
     def name(self) -> str:
-        return "light_dark_preference"
+        return "light_dark_preference_6dpf"
 
     @property
     def age(self) -> str:
@@ -193,7 +193,8 @@ class Ymaze4(Assay):
 
 class ZantiksFile:
     assay_types = {
-        "light_dark_preference": LightDarkPreference3wpf,
+        "light_dark_preference_3wpf": LightDarkPreference3wpf,
+        "light_dark_preference_6dpf": LightDarkPreference6dpf,
         "light_dark_transition": LightDarkTransition,
         "mirror_biting": MirrorBiting,
         "social_preference": SocialPreference,
@@ -208,7 +209,7 @@ class ZantiksFile:
         self.filename = parts[-1]
         filename_parts = self.filename.split("-")
         self.basename = (
-            parts[-2] + "/" + filename_parts[0] + "-" + filename_parts[1][:13]
+            parts[-2] + "/" + filename_parts[0] + "-" + filename_parts[1][:12]
         )
         self.groups = self._parse_groups(parts[-2])
         self.assay_type: Assay = self.assay_types[filename_parts[0]]()
@@ -478,7 +479,7 @@ class DataLoader:
 
 if __name__ == "__main__":
     dl = DataLoader().add_by_filter(
-        assay_types=("social_preference",), data_type="position"
+        assay_types=("startle_response",), data_type="position"
     )
     dfs = dl.load_all()
     for df in dfs:
