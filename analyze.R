@@ -318,7 +318,8 @@ microtracker_analysis <- function(data_file, genotypes) {
     data <- read_xlsx(data_file, skip = 25, n_max = 96)
   } else if (str_ends(data_file, ".csv")) {
     lines <- readLines(data_file)
-    csv_text <- lines[26:122]
+    starting_line <- which(str_detect(lines, fixed("Well Activity"))) + 1
+    csv_text <- lines[starting_line:(starting_line + 96)]
     data <- read_csv(I(csv_text), col_types = "cciiii")
   }
 
