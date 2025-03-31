@@ -1,5 +1,6 @@
 #!/usr/bin/env uv run
 import math
+import os
 from typing import Iterable
 
 import cv2
@@ -75,7 +76,7 @@ class Heatmap:
     def get_arena_coords(self, arena: int) -> NDArray[bool]:
         return np.all(self.arena_map == self._arena_color(arena), axis=-1)
 
-    def make_map(self, *, by_arena: bool = False, show: bool = False):
+    def make_map(self, *, show: bool = False, show_by_arena: bool = False) -> None:
         for arena_id in self.arena_ids:
             dirty_arena_points = (
                 self.xy_data.filter(pl.col("ARENA") == arena_id)
@@ -100,7 +101,11 @@ class Heatmap:
             self._process_arena(arena_points)
 
         if show:
-            self.show_map()
+            if show_by_arena:
+                for arena_id in self.arena_ids:
+                    self.show_arena(arena_id)
+            else:
+                self.show_whole_map()
 
     def _process_arena(self, arena_data: NDArray) -> NDArray:
         for x, y in arena_data:
@@ -110,7 +115,79 @@ class Heatmap:
 
         return self.map
 
-    def show_map(self, sum_radius: float = 10) -> None:
+    def show_arena(self, arena: int, sum_radius: float = 10) -> None:
+        arena_coords = self.get_arena_coords(arena - 1)
+        masked_plot = np.ma.masked_array(self.map, mask=arena_coords)
+        masked_plot[np.logical_not(arena_coords)] = 0.0
+        plot_buffer = self.map.copy()
+        plot_buffer = ndimage.gaussian_filter(plot_buffer, sum_radius)
+
+        row_min, row_max, col_min, col_max = self._find_crop_coords(arena_coords)
+        cropped_plot_buffer = plot_buffer[row_min:row_max, col_min:col_max]
+        cropped_masked_plot = masked_plot[row_min:row_max, col_min:col_max]
+
+        genotype = (
+            self.xy_data.filter(pl.col("ARENA") == arena)["Cluster"].unique().item()
+        )
+        directory = f"data/figures/{self.info.assay_type.name}/{genotype}"
+        os.makedirs(directory, exist_ok=True)
+        save_title = f"{arena}"
+        if self.info.groups is not None:
+            save_title += f"_{''.join(self.info.groups)}"
+        if self.info.day is not None:
+            save_title += f"_{self.info.month}-{self.info.day}-{self.info.year}"
+
+        plt.figure(dpi=100)
+        plt.imshow(cropped_plot_buffer, cmap="viridis")
+        plt.imshow(cropped_masked_plot, cmap="binary")
+        plt.axis("off")
+        plt.savefig(
+            f"{directory}/{save_title}.png",
+            dpi=500,
+            bbox_inches="tight",
+        )
+        plt.show()
+
+    def _find_crop_coords(
+        self, mask: NDArray[bool], buffer: float = 0.1
+    ) -> tuple[int, int, int, int]:
+        row_min, row_max, col_min, col_max = None, None, None, None
+        for i, row in enumerate(mask):
+            row_sum = np.sum(row)
+            if row_sum > 0 and not row_min:
+                row_min = i
+            elif row_sum == 0 and row_min:
+                row_max = i
+                break
+
+        for i, col in enumerate(mask.T):
+            col_sum = np.sum(col)
+            if col_sum > 0 and not col_min:
+                col_min = i
+            elif col_sum == 0 and col_min:
+                col_max = i
+                break
+
+        num_rows = row_max - row_min
+        num_cols = col_max - col_min
+        row_buffer = round(buffer * num_rows)
+        col_buffer = round(buffer * num_cols)
+        row_min -= row_buffer
+        row_max += row_buffer
+        col_min -= col_buffer
+        col_max += col_buffer
+
+        if (
+            row_min < 0
+            or col_min < 0
+            or row_max > mask.shape[0]
+            or col_max > mask.shape[1]
+        ):
+            raise ValueError("Buffer too big. Decrease size")
+
+        return row_min, row_max, col_min, col_max
+
+    def show_whole_map(self, sum_radius: float = 10) -> None:
         masked_plot = np.ma.masked_array(self.map, mask=self.arena_mask)
         masked_plot[np.logical_not(self.arena_mask)] = 0.0
         plot_buffer = self.map.copy()
@@ -171,4 +248,4 @@ if __name__ == "__main__":
     # fmt: on
     all_zantiks_data = dataloader.load_all()
     for zantiks_data in all_zantiks_data:
-        Heatmap(zantiks_data, ("WT", "HOM", "HET")).make_map(by_arena=True, show=True)
+        Heatmap(zantiks_data, ("HOM",)).make_map(show=True, show_by_arena=True)
