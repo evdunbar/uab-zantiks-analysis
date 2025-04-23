@@ -414,7 +414,10 @@ startle_response_analysis <- function(data_file, genotypes) {
     relocate(ARENA) %>%
     arrange(ARENA) %>%
     group_by(ARENA) %>%
-    summarize(`startle response: pre-pulse` = sum(DISTANCE[PHASE == "PREPULSE"]), `startle response: startle alone` = sum(DISTANCE[PHASE == "STARTLE"]))
+    summarize(
+      `startle response: pre-pulse` = sum(DISTANCE[PHASE == "PREPULSE"]),
+      `startle response: startle alone` = sum(DISTANCE[PHASE == "STARTLE"])
+    )
 
   finished_data <- processed_data %>%
     left_join(genotypes, by = join_by(ARENA == row_id)) %>%
