@@ -1,0 +1,81 @@
+[data]
+files_prefix = "data/2025/04/02/"
+files = [
+    "zantiks_a/sleep-20250401T075448.csv",
+    "zantiks_b/sleep-20250401T075504.csv",
+    "zantiks_a/light_dark_transition-20250402T075743.csv",
+    "zantiks_b/light_dark_transition-20250402T075758.csv",
+    "zantiks_a/startle_response-20250402T094401.csv",
+    "zantiks_b/startle_response-20250402T094407.csv",
+    "light_dark_preference/a/light_dark_preference-20250402T144945.csv",
+    "light_dark_preference/b/light_dark_preference-20250402T114028.csv",
+    "light_dark_preference/c/light_dark_preference-20250402T134158.csv",
+    "ymaze_15/a/ymaze_15-20250402T114001.csv",
+    "ymaze_15/b/ymaze_15-20250402T134141.csv",
+    "ymaze_15/c/ymaze_15-20250402T144930.csv",
+]
+assay_names = [
+    "sleep",
+    "sleep",
+    "light/dark transition",
+    "light/dark transition",
+    "startle response/pre-pulse inhibition",
+    "startle response/pre-pulse inhibition",
+    "light/dark preference",
+    "light/dark preference",
+    "light/dark preference",
+    "y-maze 15",
+    "y-maze 15",
+    "y-maze 15",
+]
+
+[genotypes]
+files_prefix = "data/2025/04/02/genotypes.csv"
+files = [
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+]
+counting_directions = [
+    "down",
+    "down",
+    "down",
+    "down",
+    "down",
+    "down",
+    "across",
+    "across",
+    "across",
+    "across",
+    "across",
+    "across",
+]
+
+[fish_used]
+files_prefix = "templates/fish_used/"
+files = [
+    "zantiks_left.txt",
+    "zantiks_right.txt",
+    "zantiks_left.txt",
+    "zantiks_right.txt",
+    "zantiks_left.txt",
+    "zantiks_right.txt",
+    "twelve_2.txt",
+    "twelve_3.txt",
+    "twelve_1.txt",
+    "twelve_1.txt",
+    "twelve_2.txt",
+    "twelve_3.txt",
+]
+
+[output]
+file = ""

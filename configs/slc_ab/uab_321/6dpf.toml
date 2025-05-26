@@ -1,0 +1,86 @@
+[data]
+files_prefix = "data/2025/"
+files = [
+    "03/20/zantiks_a/light_dark_transition-20250320T092135.csv",
+    "03/20/zantiks_b/light_dark_transition-20250320T092152.csv",
+    "03/20/zantiks_a/startle_response-20250320T103847.csv",
+    "03/20/light_dark_preference/a/light_dark_preference-20250320T132815.csv",
+    "03/20/light_dark_preference/b/light_dark_preference-20250320T120241.csv",
+    "03/20/ymaze_15/a/ymaze_15-20250320T115852.csv",
+    "03/20/ymaze_15/b/ymaze_15-20250320T132625.csv",
+    "04/15/light_dark_preference_6dpf/a/light_dark_preference_6dpf-20250415T141300.csv",
+    "04/15/light_dark_preference_6dpf/b/light_dark_preference_6dpf-20250415T110503.csv",
+    "04/15/light_dark_preference_6dpf/c/light_dark_preference_6dpf-20250415T131932.csv",
+    "04/15/ymaze_15/a/ymaze_15-20250415T110436.csv",
+    "04/15/ymaze_15/b/ymaze_15-20250415T121831.csv",
+    "04/15/ymaze_15/c/ymaze_15-20250415T141244.csv",
+]
+assay_names = [
+    "light/dark transition",
+    "light/dark transition",
+    "startle response/pre-pulse inhibition",
+    "light/dark preference 6dpf",
+    "light/dark preference 6dpf",
+    "y-maze 15",
+    "y-maze 15",
+    "light/dark preference 6dpf",
+    "light/dark preference 6dpf",
+    "light/dark preference 6dpf",
+    "y-maze 15",
+    "y-maze 15",
+    "y-maze 15"
+]
+
+[genotypes]
+files_prefix = "data/2025/"
+files = [
+    "03/20/genotypes.csv",
+    "03/20/genotypes.csv",
+    "03/20/genotypes.csv",
+    "03/20/genotypes.csv",
+    "03/20/genotypes.csv",
+    "03/20/genotypes.csv",
+    "03/20/genotypes.csv",
+    "04/15/genotypes.csv",
+    "04/15/genotypes.csv",
+    "04/15/genotypes.csv",
+    "04/15/genotypes.csv",
+    "04/15/genotypes.csv",
+    "04/15/genotypes.csv",
+]
+counting_directions = [
+    "down",
+    "down",
+    "down",
+    "across",
+    "across",
+    "across",
+    "across",
+    "across",
+    "across",
+    "across",
+    "across",
+    "across",
+    "across",
+]
+
+[fish_used]
+files_prefix = "templates/fish_used/"
+files = [
+    "zantiks_left.txt",
+    "zantiks_right.txt",
+    "zantiks_left.txt",
+    "twelve_1.txt",
+    "twelve_2.txt",
+    "twelve_1.txt",
+    "twelve_2.txt",
+    "twelve_1.txt",
+    "twelve_2.txt",
+    "twelve_3.txt",
+    "twelve_1.txt",
+    "twelve_2.txt",
+    "twelve_3.txt"
+]
+
+[output]
+file = ""
