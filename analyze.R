@@ -59,11 +59,12 @@ DATA_FILES <- c()
 #   2. light/dark transition
 #   3. microtracker
 #   4. mirror biting
-#   5. social preference
-#   6. startle response/pre-pulse inhibition
-#   7. total distance
-#   8. y-maze 15
-#   9. y-maze 4
+#   5. sleep
+#   6. social preference
+#   7. startle response/pre-pulse inhibition
+#   8. total distance
+#   9. y-maze 15
+#  10. y-maze 4
 ASSAY_NAMES <- c()
 
 # genotyping_file_prefix:
@@ -180,9 +181,12 @@ validate_inputs <- function() {
   # we have to know how to analyze an assay
   valid_assay_names <- c(
     "light/dark preference",
+    "light/dark preference 6dpf",
+    "light/dark preference 3wpf",
     "light/dark transition",
     "microtracker",
     "mirror biting",
+    "sleep",
     "social preference",
     "startle response/pre-pulse inhibition",
     "total distance",
@@ -365,6 +369,36 @@ mirror_biting_analysis <- function(data_file, genotypes) {
       clutch, genotype,
       `mirror biting: percent mirror time`
     )
+
+  finished_data
+}
+
+sleep_analysis <- function(data_file, genotypes) {
+  lines <- readLines(data_file)
+  csv_text <- lines[4:(length(lines) - 1)]
+  data <- read_csv(I(csv_text), col_types = "dcidddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd")
+
+  processed_data <- data %>%
+    pivot_longer(
+      cols = A1_Z1:A48_Z2,
+      names_to = c("ARENA", "ZONE"),
+      names_pattern = "A([0-9]+)_Z([1,2])",
+      values_to = "DISTANCE"
+    ) %>%
+    mutate(ARENA = as.integer(ARENA), ZONE = as.integer(ZONE)) %>%
+    relocate(ARENA, ZONE) %>%
+    arrange(ARENA, ZONE) %>%
+    group_by(ARENA) %>%
+    summarize(
+      `sleep: light/dark ratio` = (sum(DISTANCE[CONDITION == "BRIGHT"]) / 13) /
+        (sum(DISTANCE[CONDITION == "DARK"]) / 10),
+      `sleep: 1hr distance` = (sum(DISTANCE[TIME <= 3600])),
+    )
+
+  finished_data <- processed_data %>%
+    left_join(genotypes, by = join_by(ARENA == row_id)) %>%
+    arrange(clutch, genotype) %>%
+    select(clutch, genotype, `sleep: light/dark ratio`, `sleep: 1hr distance`)
 
   finished_data
 }
@@ -562,7 +596,7 @@ for (idx in seq_along(DATA_FILES)) {
 
   genotypes <- process_genotypes(genotyping_file, fish_used_file, counting_direction)
 
-  if (assay_name == "light/dark preference") {
+  if (str_starts(assay_name, fixed("light/dark preference"))) {
     data <- light_dark_preference_analysis(data_file, genotypes)
   } else if (assay_name == "light/dark transition") {
     data <- light_dark_transition_analysis(data_file, genotypes)
@@ -570,6 +604,8 @@ for (idx in seq_along(DATA_FILES)) {
     data <- microtracker_analysis(data_file, genotypes)
   } else if (assay_name == "mirror biting") {
     data <- mirror_biting_analysis(data_file, genotypes)
+  } else if (assay_name == "sleep") {
+    data <- sleep_analysis(data_file, genotypes)
   } else if (assay_name == "social preference") {
     data <- social_preference_analysis(data_file, genotypes)
   } else if (assay_name == "startle response/pre-pulse inhibition") {
