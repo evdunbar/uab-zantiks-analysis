@@ -1,0 +1,31 @@
+[data]
+files_prefix = "data/2025/05/05/sleep/"
+files = [
+    "a/sleep-20250505T075445.csv",
+    "b/sleep-20250505T075459.csv",
+]
+assay_names = [
+    "sleep",
+    "sleep"
+]
+
+[genotypes]
+files_prefix = "data/2025/05/05/genotypes.csv"
+files = [
+    "",
+    "",
+]
+counting_directions = [
+    "down",
+    "down",
+]
+
+[fish_used]
+files_prefix = "templates/fish_used/"
+files = [
+    "zantiks_left.txt",
+    "zantiks_right.txt",
+]
+
+[output]
+file = ""
