@@ -1,0 +1,26 @@
+[data]
+files_prefix = "data/2025/05/"
+files = [
+    "16/developmental_delay-20250516T103049.csv",
+]
+assay_names = [
+    "developmental delay",
+]
+
+[genotypes]
+files_prefix = "data/2025/05/"
+files = [
+    "16/genotypes.csv",
+]
+counting_directions = [
+    "across",
+]
+
+[fish_used]
+files_prefix = "data/2025/05/"
+files = [
+    "16/fish_used.txt",
+]
+
+[output]
+file = ""

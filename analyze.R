@@ -55,16 +55,17 @@ DATA_FILES <- c()
 # - type:
 #   - vector of strings
 # - choices:
-#   1. light/dark preference
-#   2. light/dark transition
-#   3. microtracker
-#   4. mirror biting
-#   5. sleep
-#   6. social preference
-#   7. startle response/pre-pulse inhibition
-#   8. total distance
-#   9. y-maze 15
-#  10. y-maze 4
+#   1. developmental delay
+#   2. light/dark preference
+#   3. light/dark transition
+#   4. microtracker
+#   5. mirror biting
+#   6. sleep
+#   7. social preference
+#   8. startle response/pre-pulse inhibition
+#   9. total distance
+#  10. y-maze 15
+#  11. y-maze 4
 ASSAY_NAMES <- c()
 
 # genotyping_file_prefix:
@@ -180,6 +181,7 @@ validate_inputs <- function() {
 
   # we have to know how to analyze an assay
   valid_assay_names <- c(
+    "developmental delay",
     "light/dark preference",
     "light/dark preference 6dpf",
     "light/dark preference 3wpf",
@@ -253,6 +255,45 @@ process_genotypes <- function(genotyping_file, fish_used_file, counting_directio
 #####################################
 # ASSAY SPECIFIC ANALYSIS FUNCTIONS #
 #####################################
+
+developmental_delay_analysis <- function(data_file, genotypes) {
+  lines <- readLines(data_file)
+  csv_text <- lines[4:(length(lines) - 1)]
+  data <- read_csv(I(csv_text), col_types = "didddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd")
+
+  processed_data <- data %>%
+    pivot_longer(
+      cols = A1:A96,
+      names_to = "ARENA",
+      names_pattern = "A([0-9]+)",
+      values_to = "PIXEL_DIFFERENCE"
+    ) %>%
+    mutate(ARENA = as.integer(ARENA)) %>%
+    relocate(ARENA) %>%
+    arrange(ARENA) %>%
+    group_by(ARENA) %>%
+    summarize(
+      `developmental delay: pixel difference` = sum(PIXEL_DIFFERENCE),
+    )
+
+  stupid_genotypes <- genotypes %>%
+    mutate(
+      row_as_num = match(row, LETTERS),
+      row_id = case_when(
+        row_as_num %in% c(1, 2, 3, 4) & column <= 6 ~ (row_as_num - 1) * 6 + column,
+        row_as_num %in% c(1, 2, 3, 4) & column > 6 ~ (row_as_num - 1) * 6 + (column - 6) + 24,
+        row_as_num %in% c(5, 6, 7, 8) & column <= 6 ~ (row_as_num - 5) * 6 + column + 48,
+        row_as_num %in% c(5, 6, 7, 8) & column > 6 ~ (row_as_num - 5) * 6 + (column - 6) + 72,
+      ),
+    )
+
+  finished_data <- processed_data %>%
+    left_join(stupid_genotypes, by = join_by(ARENA == row_id)) %>%
+    arrange(clutch, genotype) %>%
+    select(clutch, genotype, `developmental delay: pixel difference`)
+
+  finished_data
+}
 
 light_dark_preference_analysis <- function(data_file, genotypes) {
   lines <- readLines(data_file)
@@ -596,7 +637,9 @@ for (idx in seq_along(DATA_FILES)) {
 
   genotypes <- process_genotypes(genotyping_file, fish_used_file, counting_direction)
 
-  if (str_starts(assay_name, fixed("light/dark preference"))) {
+  if (assay_name == "developmental delay") {
+    data <- developmental_delay_analysis(data_file, genotypes)
+  } else if (str_starts(assay_name, fixed("light/dark preference"))) {
     data <- light_dark_preference_analysis(data_file, genotypes)
   } else if (assay_name == "light/dark transition") {
     data <- light_dark_transition_analysis(data_file, genotypes)
