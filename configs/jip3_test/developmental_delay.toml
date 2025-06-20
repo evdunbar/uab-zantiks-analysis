@@ -2,8 +2,10 @@
 files_prefix = "data/2025/05/"
 files = [
     "16/developmental_delay-20250516T103049.csv",
+    "30/developmental_delay-20250530T094424.csv",
 ]
 assay_names = [
+    "developmental delay",
     "developmental delay",
 ]
 
@@ -11,8 +13,10 @@ assay_names = [
 files_prefix = "data/2025/05/"
 files = [
     "16/genotypes.csv",
+    "30/genotypes.csv",
 ]
 counting_directions = [
+    "across",
     "across",
 ]
 
@@ -20,6 +24,7 @@ counting_directions = [
 files_prefix = "data/2025/05/"
 files = [
     "16/fish_used.txt",
+    "30/fish_used.txt",
 ]
 
 [output]

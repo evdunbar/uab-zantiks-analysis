@@ -433,13 +433,20 @@ sleep_analysis <- function(data_file, genotypes) {
     summarize(
       `sleep: light/dark ratio` = (sum(DISTANCE[CONDITION == "BRIGHT"]) / 13) /
         (sum(DISTANCE[CONDITION == "DARK"]) / 10),
-      `sleep: 1hr distance` = (sum(DISTANCE[TIME <= 3600])),
+      `sleep: 1hr distance` = sum(DISTANCE[TIME <= 3600]),
+      `sleep: total light distance` = sum(DISTANCE[CONDITION == "BRIGHT"]),
+      `sleep: total dark distance` = sum(DISTANCE[CONDITION == "DARK"]),
     )
 
   finished_data <- processed_data %>%
     left_join(genotypes, by = join_by(ARENA == row_id)) %>%
     arrange(clutch, genotype) %>%
-    select(clutch, genotype, `sleep: light/dark ratio`, `sleep: 1hr distance`)
+    select(clutch, genotype, 
+      `sleep: light/dark ratio`,
+      `sleep: 1hr distance`,
+      `sleep: total light distance`,
+      `sleep: total dark distance`,
+    )
 
   finished_data
 }
