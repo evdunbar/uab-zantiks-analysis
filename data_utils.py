@@ -10,7 +10,7 @@ from typing import Iterable, Literal, Self, Sequence
 import numpy as np
 import polars as pl
 
-type VariableDate = Sequence[int, int | None, int | None]
+type VariableDate = Sequence[int | None]
 
 
 class Assay(ABC):
@@ -50,6 +50,10 @@ class Assay(ABC):
     @property
     def camera_parameters_path(self) -> str:
         return f"data/camera_params/{self.name}.npz"
+
+    @abstractmethod
+    def make_tabular(self, df: pl.DataFrame) -> pl.DataFrame:
+        pass
 
 
 class LightDarkPreference3wpf(Assay):
@@ -140,6 +144,67 @@ class MirrorBiting(Assay):
         return 4
 
 
+class Sleep(Assay):
+    @property
+    def name(self) -> str:
+        return "sleep"
+
+    @property
+    def pretty_name(self) -> str:
+        return "Sleep"
+
+    @property
+    def age(self) -> str:
+        return "6dpf"
+
+    @property
+    def total_arenas(self) -> int:
+        return 48
+
+    @property
+    def arenas_per_group(self) -> int | None:
+        return None
+
+    def make_tabular(self, df: pl.DataFrame) -> pl.DataFrame:
+        pattern = re.compile(r"A(\d+)_Z(\d+)")
+        df = df.unpivot(
+            index=("TIME", "CONDITION", "BIN_NUM"),
+            on=[col for col in df.columns if re.match(pattern, col)],
+            variable_name="LOCATION_CODE",
+            value_name="DISTANCE",
+        )
+        df = df.with_columns(
+            [
+                pl.col("LOCATION_CODE")
+                .str.extract(r"A(\d+)", 1)
+                .cast(pl.Int32)
+                .alias("ARENA"),
+                pl.col("LOCATION_CODE")
+                .str.extract(r"Z(\d+)", 1)
+                .cast(pl.Int32)
+                .alias("ZONE"),
+            ]
+        )
+        df = df.drop("LOCATION_CODE")
+
+        zero_arenas = (
+            df.group_by("ARENA")
+            .agg(pl.sum("DISTANCE").alias("TOTAL_DISTANCE"))
+            .filter(pl.col("TOTAL_DISTANCE") == 0)
+            .select("ARENA")
+        )
+        if not zero_arenas.is_empty():
+            zero_arena_list = zero_arenas["ARENA"].to_list()
+            result = df.filter(~pl.col("ARENA").is_in(zero_arena_list))
+        else:
+            result = df
+
+        result = result.select(
+            ("TIME", "BIN_NUM", "CONDITION", "ARENA", "ZONE", "DISTANCE")
+        )
+        return result
+
+
 class SocialPreference(Assay):
     @property
     def name(self) -> str:
@@ -228,12 +293,31 @@ class Ymaze4(Assay):
         return 4
 
 
+class ConfigParser(dict):
+    __getattr__ = dict.__getitem__
+    __setattr__ = dict.__setitem__
+    __delattr__ = dict.__delitem__
+
+    def __init__(self, d: dict = {}):
+        for key, value in d.items():
+            if hasattr(value, "keys"):
+                value = ConfigParser(value)
+            self[key] = value
+
+    def parse(self, path):
+        with open(path, "rb") as f:
+            self = ConfigParser(tomllib.load(f))
+
+        return self
+
+
 class ZantiksFile:
     assay_types = {
         "light_dark_preference_3wpf": LightDarkPreference3wpf,
         "light_dark_preference_6dpf": LightDarkPreference6dpf,
         "light_dark_transition": LightDarkTransition,
         "mirror_biting": MirrorBiting,
+        "sleep": Sleep,
         "social_preference": SocialPreference,
         "startle_response": StartleResponse,
         "ymaze_15": Ymaze15,
@@ -262,7 +346,7 @@ class ZantiksFile:
     def __repr__(self):
         return f"ZantiksFile({self.year}, {self.month}, {self.day}, {self.assay_type}, {self.groups}, {self.filename}) - is_xy: {self.is_xy}"
 
-    def _parse_groups(self, groups: str) -> tuple[str]:
+    def _parse_groups(self, groups: str) -> tuple[str, ...]:
         if groups.startswith("zantiks"):
             return (groups[-1].upper(),)
         else:
@@ -296,7 +380,7 @@ class ZantiksData:
         if zantiks_file.is_xy:
             self.data = self._expand_arenas(data)
         else:
-            self.data = self._expand_zones_and_arenas(data)
+            self.data = zantiks_file.assay_type.make_tabular(data)
 
         if use_genotypes:
             self._attach_genotypes()
@@ -437,7 +521,7 @@ class ZantiksData:
         if not self.genotypes:
             self._attach_genotypes()
 
-        if genotype is str:
+        if isinstance(genotype, str):
             genotype = (genotype,)
 
         return self.data.filter(pl.col("Cluster").is_in(genotype))
@@ -500,9 +584,10 @@ class DataLoader:
 
     def add_by_glob(self, pathglob: str) -> Self:
         self.add_by_name(glob.glob(pathglob))
+        return self
 
     def add_by_name(self, paths: str | Iterable[str]) -> Self:
-        if paths is str:
+        if isinstance(paths, str):
             paths = (paths,)
 
         self.pathnames += paths
@@ -519,9 +604,12 @@ class DataLoader:
 
 
 if __name__ == "__main__":
-    dl = DataLoader().add_by_filter(
-        assay_types=("startle_response",), data_type="position"
-    )
-    dfs = dl.load_all()
-    for df in dfs:
-        print(df.get_genotype(("WT", "HOM")))
+    # dl = DataLoader().add_by_filter(
+    #     assay_types=("startle_response",), data_type="position"
+    # )
+    # dfs = dl.load_all()
+    # for df in dfs:
+    #     print(df.get_genotype(("WT", "HOM")))
+
+    c = ConfigParser().parse("./configs/jip3_test/6dpf/light_dark_transition.toml")
+    print(c.data.files)
