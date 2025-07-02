@@ -3,13 +3,14 @@ files_prefix = "data/"
 files = [
     "2024/12/09/zantiks_a/light_dark_transition-20241209T093738.csv",
     "2024/12/09/zantiks_b/light_dark_transition-20241209T093756.csv",
-    "2025/01/13/zantiks_a/light_dark_transition-20250113T095238.csv"
+    "2025/01/13/zantiks_a/light_dark_transition-20250113T095238.csv",
 ]
 assay_names = [
     "light/dark transition",
     "light/dark transition",
-    "light/dark transition"
+    "light/dark transition",
 ]
+wildtype_file = "configs/wildtype/light_dark_transition.toml"
 
 [genotypes]
 files_prefix = "data/"
@@ -17,7 +18,7 @@ files = ["2024/12/09/genotypes.csv", "2024/12/09/genotypes.csv", "2025/01/13/gen
 counting_directions = [
     "down",
     "down",
-    "down"
+    "down",
 ]
 
 [fish_used]
@@ -25,5 +26,5 @@ files_prefix = "templates/fish_used/zantiks_"
 files = [
     "left.txt",
     "right.txt",
-    "left.txt"
+    "left.txt",
 ]

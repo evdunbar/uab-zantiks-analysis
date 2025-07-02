@@ -14,7 +14,7 @@ files = [
     "2025/03/21/social_preference/a/social_preference-20250321T104149.csv",
     "2025/03/21/social_preference/b/social_preference-20250321T131542.csv",
     "2025/03/21/social_preference/c/social_preference-20250321T123035.csv",
-    "2025/03/21/social_preference/d/social_preference-20250321T141200.csv"
+    "2025/03/21/social_preference/d/social_preference-20250321T141200.csv",
 ]
 assay_names = [
     "social preference",
@@ -30,9 +30,8 @@ assay_names = [
     "social preference",
     "social preference",
     "social preference",
-    "social preference"
+    "social preference",
 ]
-wildtype_file = "configs/wildtype/social_preference.toml"
 
 [genotypes]
 files_prefix = "data/"
@@ -87,3 +86,6 @@ files = [
     "data/2025/03/21/social_preference/c/fish_used.txt",
     "data/2025/03/21/social_preference/d/fish_used.txt"
 ]
+
+[output]
+file = ""

@@ -6,6 +6,7 @@ files = [
     "2025/01/13/zantiks_a/startle_response-20250113T105922.csv"
 ]
 assay_names = ["startle response/pre-pulse inhibition", "startle response/pre-pulse inhibition", "startle response/pre-pulse inhibition"]
+wildtype_file = "configs/wildtype/startle_response.toml"
 
 [genotypes]
 files_prefix = "data/"

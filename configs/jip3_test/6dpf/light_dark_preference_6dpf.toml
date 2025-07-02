@@ -16,6 +16,7 @@ assay_names = [
     "light/dark preference 6dpf",
     "light/dark preference 6dpf"
 ]
+wildtype_file = "configs/wildtype/light_dark_preference_6dpf.toml"
 
 [genotypes]
 files_prefix = "data/"

@@ -1,0 +1,101 @@
+[data]
+files_prefix = "data/"
+files = [
+    "2024/12/09/light_dark_preference_6dpf/a/light_dark_preference_6dpf-20241209T121344.csv",
+    "2024/12/09/light_dark_preference_6dpf/b/light_dark_preference_6dpf-20241209T130731.csv",
+    "2024/12/09/light_dark_preference_6dpf/c/light_dark_preference_6dpf-20241209T142400.csv",
+    "2025/01/13/light_dark_preference_6dpf/a/light_dark_preference_6dpf-20250113T121403.csv",
+    "2025/01/13/light_dark_preference_6dpf/b/light_dark_preference_6dpf-20250113T125912.csv",
+    "2025/01/13/light_dark_preference_6dpf/c/light_dark_preference_6dpf-20250113T134009.csv",
+    "2025/04/02/light_dark_preference/a/light_dark_preference-20250402T144945.csv",
+    "2025/04/02/light_dark_preference/b/light_dark_preference-20250402T114028.csv",
+    "2025/04/02/light_dark_preference/c/light_dark_preference-20250402T134158.csv",
+    "2025/04/15/light_dark_preference_6dpf/a/light_dark_preference_6dpf-20250415T141300.csv",
+    "2025/04/15/light_dark_preference_6dpf/b/light_dark_preference_6dpf-20250415T110503.csv",
+    "2025/04/15/light_dark_preference_6dpf/c/light_dark_preference_6dpf-20250415T131932.csv",
+    "2025/03/20/light_dark_preference/a/light_dark_preference-20250320T132815.csv",
+    "2025/03/20/light_dark_preference/b/light_dark_preference-20250320T120241.csv",
+    "2025/03/18/light_dark_preference/a/light_dark_preference-20250318T153140.csv",
+    "2025/03/18/light_dark_preference/b/light_dark_preference-20250318T135636.csv",
+]
+assay_names = [
+    "light/dark preference 6dpf",
+    "light/dark preference 6dpf",
+    "light/dark preference 6dpf",
+    "light/dark preference 6dpf",
+    "light/dark preference 6dpf",
+    "light/dark preference 6dpf",
+    "light/dark preference 6dpf",
+    "light/dark preference 6dpf",
+    "light/dark preference 6dpf",
+    "light/dark preference 6dpf",
+    "light/dark preference 6dpf",
+    "light/dark preference 6dpf",
+    "light/dark preference 6dpf",
+    "light/dark preference 6dpf",
+    "light/dark preference 6dpf",
+    "light/dark preference 6dpf",
+]
+
+[genotypes]
+files_prefix = "data/"
+files = [
+    "2024/12/09/genotypes.csv",
+    "2024/12/09/genotypes.csv",
+    "2024/12/09/genotypes.csv",
+    "2025/01/13/genotypes.csv",
+    "2025/01/13/genotypes.csv",
+    "2025/01/13/genotypes.csv",
+    "2025/04/02/genotypes.csv",
+    "2025/04/02/genotypes.csv",
+    "2025/04/02/genotypes.csv",
+    "2025/04/15/genotypes.csv",
+    "2025/04/15/genotypes.csv",
+    "2025/04/15/genotypes.csv",
+    "2025/03/20/genotypes.csv",
+    "2025/03/20/genotypes.csv",
+    "2025/03/18/genotypes.csv",
+    "2025/03/18/genotypes.csv",
+]
+counting_directions = [
+    "across",
+    "across",
+    "across",
+    "across",
+    "across",
+    "across",
+    "across",
+    "across",
+    "across",
+    "across",
+    "across",
+    "across",
+    "across",
+    "across",
+    "across",
+    "across",
+]
+
+[fish_used]
+files_prefix = "templates/fish_used/twelve_"
+files = [
+    "2.txt",
+    "3.txt",
+    "1.txt",
+    "1.txt",
+    "2.txt",
+    "3.txt",
+    "2.txt",
+    "3.txt",
+    "1.txt",
+    "1.txt",
+    "2.txt",
+    "3.txt",
+    "1.txt",
+    "2.txt",
+    "1.txt",
+    "2.txt",
+]
+
+[output]
+file = ""

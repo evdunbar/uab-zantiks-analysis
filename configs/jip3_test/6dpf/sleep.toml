@@ -10,6 +10,7 @@ assay_names = [
     "sleep",
     "sleep",
 ]
+wildtype_file = "configs/wildtype/sleep.toml"
 
 [genotypes]
 files_prefix = "data/2025/"

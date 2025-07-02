@@ -1,0 +1,61 @@
+[data]
+files_prefix = "data/"
+files = [
+    "2024/12/09/zantiks_a/startle_response-20241209T105820.csv",
+    "2024/12/09/zantiks_b/startle_response-20241209T105839.csv",
+    "2025/01/13/zantiks_a/startle_response-20250113T105922.csv",
+    "2025/03/20/zantiks_a/startle_response-20250320T103847.csv",
+    "2025/03/18/zantiks_a/startle_response-20250318T124450.csv",
+    "2025/03/18/zantiks_b/startle_response-20250318T124645.csv",
+    "2025/04/02/zantiks_a/startle_response-20250402T094401.csv",
+    "2025/04/02/zantiks_b/startle_response-20250402T094407.csv",
+]
+assay_names = [
+    "startle response/pre-pulse inhibition",
+    "startle response/pre-pulse inhibition",
+    "startle response/pre-pulse inhibition",
+    "startle response/pre-pulse inhibition",
+    "startle response/pre-pulse inhibition",
+    "startle response/pre-pulse inhibition",
+    "startle response/pre-pulse inhibition",
+    "startle response/pre-pulse inhibition",
+]
+
+[genotypes]
+files_prefix = "data/"
+files = [
+    "2024/12/09/genotypes.csv",
+    "2024/12/09/genotypes.csv",
+    "2025/01/13/genotypes.csv",
+    "2025/03/20/genotypes.csv",
+    "2025/03/18/genotypes.csv",
+    "2025/03/18/genotypes.csv",
+    "2025/04/02/genotypes.csv",
+    "2025/04/02/genotypes.csv",
+]
+counting_directions = [
+    "down",
+    "down",
+    "down",
+    "down",
+    "down",
+    "down",
+    "down",
+    "down",
+]
+
+[fish_used]
+files_prefix = "templates/fish_used/zantiks_"
+files = [
+    "left.txt",
+    "right.txt",
+    "left.txt",
+    "left.txt",
+    "left.txt",
+    "right.txt",
+    "left.txt",
+    "right.txt",
+]
+
+[output]
+file = ""

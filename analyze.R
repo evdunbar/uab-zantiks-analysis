@@ -67,6 +67,14 @@ DATA_FILES <- c()
 #  10. y-maze 15
 #  11. y-maze 4
 ASSAY_NAMES <- c()
+# wildtype_file:
+# - type:
+#   - string
+# - choices:
+#   1. ""
+#   2. one "relative/path"
+#   - should contain a config file for ALL wild type data for that assay
+WILDTYPE_FILE <- ""
 
 # genotyping_file_prefix:
 # - type:
@@ -141,11 +149,11 @@ if (CONFIG_FILE != "") {
     # use <<- instead of <- to assign to the global variables
     DATA_FILE_PREFIX <<- config$data$files_prefix
     DATA_FILES <<- config$data$files
+    ASSAY_NAMES <<- config$data$assay_names
+    WILDTYPE_FILE <<- config$data$wildtype_file
 
     GENOTYPING_FILE_PREFIX <<- config$genotypes$files_prefix
     GENOTYPING_FILES <<- config$genotypes$files
-
-    ASSAY_NAMES <<- config$data$assay_names
 
     FISH_USED_PREFIX <<- config$fish_used$files_prefix
     FISH_USED <<- config$fish_used$files
@@ -644,6 +652,7 @@ for (idx in seq_along(DATA_FILES)) {
 
   genotypes <- process_genotypes(genotyping_file, fish_used_file, counting_direction)
 
+  # run analysis
   if (assay_name == "developmental delay") {
     data <- developmental_delay_analysis(data_file, genotypes)
   } else if (str_starts(assay_name, fixed("light/dark preference"))) {
@@ -666,11 +675,65 @@ for (idx in seq_along(DATA_FILES)) {
     data <- y_maze_analysis(data_file, genotypes)
   }
 
+  # combine all data files
   if (idx == 1) {
     all_data <- data
   } else {
     all_data <- bind_rows(all_data, data)
   }
+}
+
+# add wildtype data if needed
+if (WILDTYPE_FILE != "") {
+  CONFIG_FILE <- WILDTYPE_FILE
+  load_config()
+  validate_inputs()
+
+  for (idx in seq_along(DATA_FILES)) {
+    # get correct files by corresponding index
+    data_file <- paste0(DATA_FILE_PREFIX, DATA_FILES[idx])
+    genotyping_file <- paste0(GENOTYPING_FILE_PREFIX, GENOTYPING_FILES[idx])
+    fish_used_file <- paste0(FISH_USED_PREFIX, FISH_USED[idx])
+    assay_name <- ASSAY_NAMES[idx]
+    counting_direction <- COUNTING_DIRECTIONS[idx]
+
+    genotypes <- process_genotypes(genotyping_file, fish_used_file, counting_direction)
+
+    # run analysis
+    if (assay_name == "developmental delay") {
+      data <- developmental_delay_analysis(data_file, genotypes)
+    } else if (str_starts(assay_name, fixed("light/dark preference"))) {
+      data <- light_dark_preference_analysis(data_file, genotypes)
+    } else if (assay_name == "light/dark transition") {
+      data <- light_dark_transition_analysis(data_file, genotypes)
+    } else if (assay_name == "microtracker") {
+      data <- microtracker_analysis(data_file, genotypes)
+    } else if (assay_name == "mirror biting") {
+      data <- mirror_biting_analysis(data_file, genotypes)
+    } else if (assay_name == "sleep") {
+      data <- sleep_analysis(data_file, genotypes)
+    } else if (assay_name == "social preference") {
+      data <- social_preference_analysis(data_file, genotypes)
+    } else if (assay_name == "startle response/pre-pulse inhibition") {
+      data <- startle_response_analysis(data_file, genotypes)
+    } else if (assay_name == "total distance") {
+      data <- total_distance_analysis(data_file, genotypes)
+    } else if (assay_name == "y-maze 15" || assay_name == "y-maze 4") {
+      data <- y_maze_analysis(data_file, genotypes)
+    }
+
+    # combine all data files
+    if (idx == 1) {
+      wildtype_data <- data
+    } else {
+      wildtype_data <- bind_rows(wildtype_data, data)
+    }
+  }
+
+  # combine all wildtype data with no repeats
+  all_data_no_wildtype <- filter(all_data, genotype != "WT")
+  wildtype_data <- filter(wildtype_data, genotype == "WT")
+  all_data <- bind_rows(all_data_no_wildtype, wildtype_data)
 }
 
 all_data <- all_data %>%

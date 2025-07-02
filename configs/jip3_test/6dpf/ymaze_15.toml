@@ -24,6 +24,7 @@ assay_names = [
     "y-maze 15",
     "y-maze 15"
 ]
+wildtype_file = "configs/wildtype/ymaze_15.toml"
 
 [genotypes]
 files_prefix = "data/2024/"

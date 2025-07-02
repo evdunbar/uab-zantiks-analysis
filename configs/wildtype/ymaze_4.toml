@@ -18,7 +18,7 @@ files = [
     "2025/02/18/ymaze_4/a/ymaze_4-20250218T095304.csv",
     "2025/02/18/ymaze_4/b/ymaze_4-20250218T111209.csv",
     "2025/02/18/ymaze_4/c/ymaze_4-20250218T122905.csv",
-    "2025/02/18/ymaze_4/d/ymaze_4-20250218T134130.csv"
+    "2025/02/18/ymaze_4/d/ymaze_4-20250218T134130.csv",
 ]
 assay_names = [
     "y-maze 4",
@@ -38,9 +38,8 @@ assay_names = [
     "y-maze 4",
     "y-maze 4",
     "y-maze 4",
-    "y-maze 4"
+    "y-maze 4",
 ]
-wildtype_file = "configs/wildtype/ymaze_4.toml"
 
 [genotypes]
 files_prefix = "data/"
@@ -62,7 +61,7 @@ files = [
     "2025/02/18/genotypes.csv",
     "2025/02/18/genotypes.csv",
     "2025/02/18/genotypes.csv",
-    "2025/02/18/genotypes.csv"
+    "2025/02/18/genotypes.csv",
 ]
 counting_directions = [
     "across",
@@ -82,7 +81,7 @@ counting_directions = [
     "across",
     "across",
     "across",
-    "across"
+    "across",
 ]
 
 [fish_used]
@@ -105,5 +104,8 @@ files = [
     "templates/fish_used/four_1.txt",
     "templates/fish_used/four_2.txt",
     "templates/fish_used/four_3.txt",
-    "templates/fish_used/four_4.txt"
+    "templates/fish_used/four_4.txt",
 ]
+
+[output]
+file = ""
